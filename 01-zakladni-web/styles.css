@@ -54,6 +54,12 @@ section {
     margin-bottom: 2rem;
 }
 
+.article-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
 article {
     background: white;
     padding: 1rem;
@@ -82,5 +88,9 @@ footer {
     main {
         max-width: 800px;
         margin: 0 auto;
+    }
+
+    .article-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
