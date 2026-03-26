@@ -11,7 +11,7 @@
         <h2>Přidat knihu</h2>
         <p>Vyplňte formulář pro přidání nové knihy do databáze.</p>
     </div>
-        <form action="../../Controllers/BookController.php" method="post" enctype="multipart/form-data">
+        <form action="../../controllers/BookController.php" method="post" enctype="multipart/form-data">
             <div>
                 <label for="title">Název knihy: <span>*</span></label>
                 <input type="text" id="title" name="title" required>
