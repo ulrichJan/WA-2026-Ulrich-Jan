@@ -49,6 +49,51 @@ class Book {
         return false;
     }
 
+    public function getAll() {
+        $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getById($id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function update($id, $title, $author, $isbn, $published_date, $price, $description, $images = []) {
+        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+
+        $title = htmlspecialchars(strip_tags($title));
+        $author = htmlspecialchars(strip_tags($author));
+        $isbn = htmlspecialchars(strip_tags($isbn));
+        $published_date = htmlspecialchars(strip_tags($published_date));
+        $price = htmlspecialchars(strip_tags($price));
+        $description = htmlspecialchars(strip_tags($description));
+        $images = json_encode($images);
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':title' => $title,
+            ':author' => $author,
+            ':isbn' => $isbn,
+            ':published_date' => $published_date,
+            ':price' => $price,
+            ':description' => $description,
+            ':images' => $images
+        ]);
+    }
+
+    public function delete($id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':id' => $id]);
+    }
+
     // Method to handle image uploads
     public function uploadImages($files) {
         $uploadedImages = [];

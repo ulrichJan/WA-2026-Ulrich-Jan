@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Přidat knihu</title>
+    <title>Upravit knihu</title>
     <style>
         :root {
-            color-scheme: light;
             --bg: #fdf0d5;
             --surface: #ffffff;
             --accent: #c1121f;
             --accent-dark: #930f1b;
-            --text: #212121;
+            --text: #222222;
             --muted: #5d4f47;
-            --border: #e8d3c0;
+            --border: #e7d1c0;
             --radius: 20px;
         }
         * { box-sizing: border-box; }
@@ -21,7 +20,7 @@
             margin: 0;
             min-height: 100vh;
             font-family: Inter, system-ui, sans-serif;
-            background: linear-gradient(180deg, var(--bg) 0%, #fff7e8 100%);
+            background: linear-gradient(180deg, var(--bg) 0%, #fff9e9 100%);
             color: var(--text);
         }
         .container {
@@ -31,21 +30,26 @@
         }
         .card {
             background: var(--surface);
-            border: 1px solid rgba(193,18,31,0.12);
             border-radius: var(--radius);
+            border: 1px solid rgba(193,18,31,0.12);
             box-shadow: 0 28px 80px rgba(0,0,0,0.08);
             padding: 32px;
         }
+        a.back {
+            display: inline-block;
+            margin-bottom: 24px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        a.back:hover {
+            color: var(--accent-dark);
+        }
         h2 {
             margin: 0 0 8px;
-            font-size: clamp(2rem, 2.5vw, 2.6rem);
-            letter-spacing: -0.04em;
+            font-size: clamp(2rem, 2.5vw, 2.4rem);
         }
-        p.lead {
-            margin: 0 0 28px;
-            color: var(--muted);
-            line-height: 1.7;
-        }
+        p { color: var(--muted); line-height: 1.7; }
         form {
             display: grid;
             gap: 18px;
@@ -71,43 +75,28 @@
             color: var(--text);
             font: inherit;
         }
-        textarea {
-            resize: vertical;
-            min-height: 140px;
-        }
-        button,
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 26px;
+        textarea { min-height: 140px; resize: vertical; }
+        button {
+            padding: 14px 28px;
             border: none;
             border-radius: 999px;
             background: var(--accent);
             color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: transform .2s ease, background .2s ease;
-            text-decoration: none;
+            transition: background .2s ease, transform .2s ease;
         }
-        button:hover,
-        .btn:hover {
-            background: var(--accent-dark);
-            transform: translateY(-1px);
-        }
+        button:hover { background: var(--accent-dark); transform: translateY(-1px); }
         .upload-label {
             display: inline-flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             padding: 16px;
             border: 1px dashed var(--border);
             border-radius: 16px;
             background: #fff8f0;
             color: var(--muted);
             cursor: pointer;
-        }
-        .upload-label span {
-            display: block;
         }
         .upload-label input {
             display: none;
@@ -120,42 +109,49 @@
 <body>
     <div class="container">
         <div class="card">
-            <h2>Přidat knihu</h2>
-            <p class="lead">Vyplňte formulář pro přidání nové knihy do databáze.</p>
-            <form action="../../controllers/BookController.php" method="post" enctype="multipart/form-data">
+            <p><a class="back" href="BookController.php?action=index">&larr; Zpět na seznam knih</a></p>
+            <div>
+                <h2>Upravit knihu (ID záznamu: <?= htmlspecialchars($book['id']) ?>)</h2>
+                <p>Upravujete data pro knihu: <strong><?= htmlspecialchars($book['title']) ?></strong></p>
+                <p>Změňte požadované údaje a uložte formulář.</p>
+            </div>
+            <form action="BookController.php?action=update&id=<?= htmlspecialchars($book['id']) ?>" method="post" enctype="multipart/form-data">
+                <div class="field">
+                    <label for="id_display">ID v databázi</label>
+                    <input type="text" id="id_display" value="<?= htmlspecialchars($book['id']) ?>" readonly>
+                </div>
                 <div class="field">
                     <label for="title">Název knihy <span class="required">*</span></label>
-                    <input type="text" id="title" name="title" required>
+                    <input type="text" id="title" name="title" value="<?= htmlspecialchars($book['title']) ?>" required>
                 </div>
                 <div class="field">
                     <label for="author">Autor <span class="required">*</span></label>
-                    <input type="text" id="author" name="author" required>
+                    <input type="text" id="author" name="author" value="<?= htmlspecialchars($book['author']) ?>" required>
                 </div>
                 <div class="field">
-                    <label for="isbn">ISBN <span class="required">*</span></label>
-                    <input type="text" id="isbn" name="isbn" required>
+                    <label for="isbn">ISBN</label>
+                    <input type="text" id="isbn" name="isbn" value="<?= htmlspecialchars($book['isbn']) ?>">
                 </div>
                 <div class="field">
                     <label for="published_date">Datum vydání</label>
-                    <input type="date" id="published_date" name="published_date">
+                    <input type="date" id="published_date" name="published_date" value="<?= htmlspecialchars($book['published_date']) ?>">
                 </div>
                 <div class="field">
                     <label for="price">Cena knihy</label>
-                    <input type="number" id="price" name="price" step="0.5">
+                    <input type="number" id="price" name="price" step="0.5" value="<?= htmlspecialchars($book['price']) ?>">
                 </div>
                 <div class="field">
                     <label for="description">Popis</label>
-                    <textarea id="description" name="description" rows="5"></textarea>
+                    <textarea id="description" name="description" rows="5"><?= htmlspecialchars($book['description']) ?></textarea>
                 </div>
                 <div class="field">
                     <label class="upload-label" for="images">
-                        <span>Obrázky (můžete nahrát více)</span>
-                        <span>JPG / PNG / WebP – více souborů najednou</span>
+                        <span>Obrázky (můžete zvolit nové soubory, budou přidány)</span>
                         <input type="file" id="images" name="images[]" multiple accept="image/*">
                     </label>
                 </div>
                 <div>
-                    <button type="submit">Přidat knihu</button>
+                    <button type="submit">Uložit změny do DB</button>
                 </div>
             </form>
         </div>
