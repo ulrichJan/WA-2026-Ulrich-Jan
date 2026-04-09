@@ -1,160 +1,135 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upravit knihu</title>
-    <style>
-        :root {
-            --bg: #fdf0d5;
-            --surface: #ffffff;
-            --accent: #c1121f;
-            --accent-dark: #930f1b;
-            --text: #222222;
-            --muted: #5d4f47;
-            --border: #e7d1c0;
-            --radius: 20px;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, system-ui, sans-serif;
-            background: linear-gradient(180deg, var(--bg) 0%, #fff9e9 100%);
-            color: var(--text);
-        }
-        .container {
-            width: min(1100px, calc(100% - 32px));
-            margin: 0 auto;
-            padding: 32px 0;
-        }
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            border: 1px solid rgba(193,18,31,0.12);
-            box-shadow: 0 28px 80px rgba(0,0,0,0.08);
-            padding: 32px;
-        }
-        a.back {
-            display: inline-block;
-            margin-bottom: 24px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-        a.back:hover {
-            color: var(--accent-dark);
-        }
-        h2 {
-            margin: 0 0 8px;
-            font-size: clamp(2rem, 2.5vw, 2.4rem);
-        }
-        p { color: var(--muted); line-height: 1.7; }
-        form {
-            display: grid;
-            gap: 18px;
-        }
-        .field {
-            display: grid;
-            gap: 10px;
-        }
-        label {
-            font-weight: 600;
-            color: #423a37;
-        }
-        input[type="text"],
-        input[type="date"],
-        input[type="number"],
-        textarea,
-        input[type="file"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: #fff;
-            color: var(--text);
-            font: inherit;
-        }
-        textarea { min-height: 140px; resize: vertical; }
-        button {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 999px;
-            background: var(--accent);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background .2s ease, transform .2s ease;
-        }
-        button:hover { background: var(--accent-dark); transform: translateY(-1px); }
-        .upload-label {
-            display: inline-flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 16px;
-            border: 1px dashed var(--border);
-            border-radius: 16px;
-            background: #fff8f0;
-            color: var(--muted);
-            cursor: pointer;
-        }
-        .upload-label input {
-            display: none;
-        }
-        span.required {
-            color: var(--accent);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <p><a class="back" href="BookController.php?action=index">&larr; Zpět na seznam knih</a></p>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
+
+<main class="container mx-auto px-6 pb-10 pt-6 flex-grow">
+    <div class="bg-white border border-[#f6e6da] rounded-xl overflow-hidden shadow-lg p-8">
+        <p><a class="text-[#c1121f] font-semibold" href="BookController.php?action=index">&larr; Zpět na seznam knih</a></p>
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold text-[#6b291f]">Upravit knihu (ID záznamu: <?= htmlspecialchars($book['id']) ?>)</h2>
+            <p class="text-[#6b291f]">Upravujete data pro knihu: <strong><?= htmlspecialchars($book['title']) ?></strong></p>
+            <p class="text-sm text-[#6b291f]">Změňte požadované údaje a uložte formulář.</p>
+        </div>
+
+        <form action="BookController.php?action=update&id=<?= htmlspecialchars($book['id']) ?>" method="post" enctype="multipart/form-data" class="grid gap-4">
             <div>
-                <h2>Upravit knihu (ID záznamu: <?= htmlspecialchars($book['id']) ?>)</h2>
-                <p>Upravujete data pro knihu: <strong><?= htmlspecialchars($book['title']) ?></strong></p>
-                <p>Změňte požadované údaje a uložte formulář.</p>
+                <label for="id_display" class="block text-sm text-[#6b291f]">ID v databázi</label>
+                <input type="text" id="id_display" value="<?= htmlspecialchars($book['id']) ?>" readonly class="w-full p-3 rounded-md border border-[#f0ded5]">
             </div>
-            <form action="BookController.php?action=update&id=<?= htmlspecialchars($book['id']) ?>" method="post" enctype="multipart/form-data">
-                <div class="field">
-                    <label for="id_display">ID v databázi</label>
-                    <input type="text" id="id_display" value="<?= htmlspecialchars($book['id']) ?>" readonly>
-                </div>
-                <div class="field">
-                    <label for="title">Název knihy <span class="required">*</span></label>
-                    <input type="text" id="title" name="title" value="<?= htmlspecialchars($book['title']) ?>" required>
-                </div>
-                <div class="field">
-                    <label for="author">Autor <span class="required">*</span></label>
-                    <input type="text" id="author" name="author" value="<?= htmlspecialchars($book['author']) ?>" required>
-                </div>
-                <div class="field">
-                    <label for="isbn">ISBN</label>
-                    <input type="text" id="isbn" name="isbn" value="<?= htmlspecialchars($book['isbn']) ?>">
-                </div>
-                <div class="field">
-                    <label for="published_date">Datum vydání</label>
-                    <input type="date" id="published_date" name="published_date" value="<?= htmlspecialchars($book['published_date']) ?>">
-                </div>
-                <div class="field">
-                    <label for="price">Cena knihy</label>
-                    <input type="number" id="price" name="price" step="0.5" value="<?= htmlspecialchars($book['price']) ?>">
-                </div>
-                <div class="field">
-                    <label for="description">Popis</label>
-                    <textarea id="description" name="description" rows="5"><?= htmlspecialchars($book['description']) ?></textarea>
-                </div>
-                <div class="field">
-                    <label class="upload-label" for="images">
-                        <span>Obrázky (můžete zvolit nové soubory, budou přidány)</span>
-                        <input type="file" id="images" name="images[]" multiple accept="image/*">
-                    </label>
+
+            <div>
+                <label for="title" class="text-sm font-medium">Název knihy <span class="text-[#c1121f]">*</span></label>
+                <input type="text" id="title" name="title" value="<?= htmlspecialchars($book['title']) ?>" required class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div>
+                <label for="author" class="text-sm font-medium">Autor <span class="text-[#c1121f]">*</span></label>
+                <input type="text" id="author" name="author" value="<?= htmlspecialchars($book['author']) ?>" required class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div>
+                <label for="isbn" class="text-sm font-medium">ISBN</label>
+                <input type="text" id="isbn" name="isbn" value="<?= htmlspecialchars($book['isbn']) ?>" class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="published_date" class="text-sm font-medium">Datum vydání</label>
+                    <input type="date" id="published_date" name="published_date" value="<?= htmlspecialchars($book['published_date']) ?>" class="w-full p-3 rounded-md border border-[#f0ded5]">
                 </div>
                 <div>
-                    <button type="submit">Uložit změny do DB</button>
+                    <label for="price" class="text-sm font-medium">Cena knihy</label>
+                    <input type="number" id="price" name="price" step="0.5" value="<?= htmlspecialchars($book['price']) ?>" class="w-full p-3 rounded-md border border-[#f0ded5]">
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div>
+                <label for="description" class="text-sm font-medium">Popis</label>
+                <textarea id="description" name="description" rows="5" class="w-full p-3 rounded-md border border-[#f0ded5]"><?= htmlspecialchars($book['description']) ?></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-[#6b291f] mb-2 uppercase tracking-wider">Obrázky knihy</label>
+
+                <?php
+                    // Show existing images (if any)
+                    $existingImages = [];
+                    if (!empty($book['images'])) {
+                        $existingImages = json_decode($book['images'], true);
+                        if (!is_array($existingImages)) {
+                            $existingImages = [$book['images']];
+                        }
+                    }
+                ?>
+
+                <?php if (!empty($existingImages)): ?>
+                    <div class="mb-4">
+                        <p class="text-sm font-medium text-[#6b291f] mb-2">Existující obrázky:</p>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            <?php foreach ($existingImages as $img): ?>
+                                <?php
+                                    $srcImg = $img;
+                                    if (strpos($srcImg, '/') === false && strpos($srcImg, 'http') === false) {
+                                        $srcImg = '/uploads/' . $srcImg;
+                                    }
+                                ?>
+                                <span class="px-2 py-1 text-xs bg-[#f6e6da] text-[#6b291f] rounded-md"><?= htmlspecialchars(basename($img)) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="mb-4 grid grid-cols-3 gap-3">
+                            <?php foreach ($existingImages as $img): ?>
+                                <?php
+                                    $srcImg = $img;
+                                    if (strpos($srcImg, '/') === false && strpos($srcImg, 'http') === false) {
+                                        $srcImg = '/uploads/' . $srcImg;
+                                    }
+                                ?>
+                                <div class="border rounded-md overflow-hidden">
+                                    <img src="<?= htmlspecialchars($srcImg) ?>" alt="obrazek" style="width:100%;height:120px;object-fit:cover;">
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="text-sm text-[#c1121f] italic">Upozornění: Pokud nyní nahrajete nové soubory, tyto staré budou přepsány.</p>
+                    </div>
+                <?php endif; ?>
+
+                <div class="w-full">
+                    <label for="images" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-white/5 hover:bg-white/10 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-3 pb-2">
+                            <span id="file-title" class="text-sm text-[#6b291f] font-semibold">Klikni pro výběr souborů</span>
+                            <span id="file-info" class="text-xs text-[#6b291f] mt-1 text-center px-4">Žádné soubory nebyly vybrány</span>
+                        </div>
+                        <input type="file" id="images" name="images[]" multiple accept="image/*" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="bg-[#c1121f] hover:bg-[#930f1b] text-[#fdf0d5] px-4 py-2 rounded-md font-bold">Uložit změny do DB</button>
+            </div>
+        </form>
     </div>
-</body>
-</html>
+
+    <script>
+        const fileInput = document.getElementById('images');
+        const fileTitle = document.getElementById('file-title');
+        const fileInfo = document.getElementById('file-info');
+
+        fileInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+
+            if (!files || files.length === 0) {
+                fileTitle.textContent = 'Klikněte pro výběr souborů';
+                fileTitle.className = 'text-sm text-[#6b291f] font-semibold';
+                fileInfo.textContent = 'Žádné soubory nebyly vybrány';
+            } else if (files.length === 1) {
+                fileTitle.textContent = 'Soubor připraven';
+                fileTitle.className = 'text-sm text-[#c1121f] font-bold';
+                fileInfo.textContent = files[0].name;
+            } else {
+                fileTitle.textContent = 'Soubory připraveny';
+                fileTitle.className = 'text-sm text-[#c1121f] font-bold';
+                fileInfo.textContent = 'Vybráno celkem: ' + files.length + ' souborů';
+            }
+        });
+    </script>
+
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>

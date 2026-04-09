@@ -2,26 +2,31 @@
 session_start();
 
 require_once '../models/Book.php';
+require_once '../dto/BookDTO.php';
 
 class BookController {
 
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $book = new Book();
+            // Build DTO from POST
+            $data = [
+                'title' => $_POST['title'] ?? '',
+                'author' => $_POST['author'] ?? '',
+                'isbn' => $_POST['isbn'] ?? '',
+                'published_date' => $_POST['published_date'] ?? '',
+                'price' => $_POST['price'] ?? '',
+                'description' => $_POST['description'] ?? '',
+            ];
 
-            $book->title = $_POST['title'] ?? '';
-            $book->author = $_POST['author'] ?? '';
-            $book->isbn = $_POST['isbn'] ?? '';
-            $book->published_date = $_POST['published_date'] ?? '';
-            $book->price = $_POST['price'] ?? '';
-            $book->description = $_POST['description'] ?? '';
+            $dto = new BookDTO($data);
 
-            // Handle image uploads
-            if (isset($_FILES['images'])) {
-                $book->uploadImages($_FILES);
-            }
+            $bookModel = new Book();
 
-            if ($book->create()) {
+            // Handle image uploads and attach to DTO (processed by controller helper)
+            $uploaded = $this->processImageUploads();
+            $dto->images = $uploaded;
+
+            if ($bookModel->createFromDTO($dto)) {
                 $this->addSuccessMessage('Kniha byla úspěšně přidána.');
                 header("Location: BookController.php?action=index");
                 exit;
@@ -78,36 +83,38 @@ class BookController {
             exit;
         }
 
-        $title = htmlspecialchars($_POST['title'] ?? '');
-        $author = htmlspecialchars($_POST['author'] ?? '');
-        $isbn = htmlspecialchars($_POST['isbn'] ?? '');
-        $published_date = htmlspecialchars($_POST['published_date'] ?? '');
-        $price = htmlspecialchars($_POST['price'] ?? '');
-        $description = htmlspecialchars($_POST['description'] ?? '');
+        // Build DTO from POST
+        $data = [
+            'title' => $_POST['title'] ?? '',
+            'author' => $_POST['author'] ?? '',
+            'isbn' => $_POST['isbn'] ?? '',
+            'published_date' => $_POST['published_date'] ?? '',
+            'price' => $_POST['price'] ?? '',
+            'description' => $_POST['description'] ?? '',
+        ];
+
+        $dto = new BookDTO($data);
 
         $book = new Book();
         $existingBook = $book->getById($id);
         $uploadedImages = [];
 
+        // If files were submitted, try to process them
         if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-            $uploadedImages = $book->uploadImages($_FILES);
-        } elseif ($existingBook && !empty($existingBook['images'])) {
+            $uploadedImages = $this->processImageUploads();
+        }
+
+        // Rescue: if no new images were uploaded (or processing yielded none), keep existing images
+        if (empty($uploadedImages) && $existingBook && !empty($existingBook['images'])) {
             $uploadedImages = json_decode($existingBook['images'], true);
             if (!is_array($uploadedImages)) {
                 $uploadedImages = [$existingBook['images']];
             }
         }
 
-        $isUpdated = $book->update(
-            $id,
-            $title,
-            $author,
-            $isbn,
-            $published_date,
-            $price,
-            $description,
-            $uploadedImages
-        );
+        $dto->images = $uploadedImages;
+
+        $isUpdated = $book->updateFromDTO($id, $dto);
 
         if ($isUpdated) {
             $this->addSuccessMessage('Kniha byla úspěšně upravena.');
@@ -178,6 +185,46 @@ class BookController {
 
     protected function addErrorMessage($message) {
         $_SESSION['messages']['error'][] = $message;
+    }
+
+    // --- Pomocná metoda pro zpracování nahrávání obrázků ---
+    protected function processImageUploads() {
+        $uploadedFiles = [];
+
+        // Cesta ke složce, kam se budou obrázky fyzicky ukládat (relativně od tohoto kontroleru)
+        $uploadDir = __DIR__ . '/../../public/uploads/';
+
+        // Zkontrolujeme, zda vůbec existuje adresář, pokud ne, vytvoříme ho
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Zkontrolujeme, zda byl odeslán alespoň jeden soubor
+        if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+            $fileCount = count($_FILES['images']['name']);
+
+            for ($i = 0; $i < $fileCount; $i++) {
+                if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['images']['tmp_name'][$i];
+                    $originalName = basename($_FILES['images']['name'][$i]);
+                    $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                    if (!in_array($fileExtension, $allowedExtensions)) {
+                        continue;
+                    }
+
+                    $newName = 'book_' . uniqid() . '_' . substr(md5(mt_rand()), 0, 4) . '.' . $fileExtension;
+                    $targetFilePath = $uploadDir . $newName;
+
+                    if (move_uploaded_file($tmpName, $targetFilePath)) {
+                        $uploadedFiles[] = $newName; // store only filename
+                    }
+                }
+            }
+        }
+
+        return $uploadedFiles;
     }
 }
 

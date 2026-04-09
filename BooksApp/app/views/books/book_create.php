@@ -1,164 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Přidat knihu</title>
-    <style>
-        :root {
-            color-scheme: light;
-            --bg: #fdf0d5;
-            --surface: #ffffff;
-            --accent: #c1121f;
-            --accent-dark: #930f1b;
-            --text: #212121;
-            --muted: #5d4f47;
-            --border: #e8d3c0;
-            --radius: 20px;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, system-ui, sans-serif;
-            background: linear-gradient(180deg, var(--bg) 0%, #fff7e8 100%);
-            color: var(--text);
-        }
-        .container {
-            width: min(1100px, calc(100% - 32px));
-            margin: 0 auto;
-            padding: 32px 0;
-        }
-        .card {
-            background: var(--surface);
-            border: 1px solid rgba(193,18,31,0.12);
-            border-radius: var(--radius);
-            box-shadow: 0 28px 80px rgba(0,0,0,0.08);
-            padding: 32px;
-        }
-        h2 {
-            margin: 0 0 8px;
-            font-size: clamp(2rem, 2.5vw, 2.6rem);
-            letter-spacing: -0.04em;
-        }
-        p.lead {
-            margin: 0 0 28px;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-        form {
-            display: grid;
-            gap: 18px;
-        }
-        .field {
-            display: grid;
-            gap: 10px;
-        }
-        label {
-            font-weight: 600;
-            color: #423a37;
-        }
-        input[type="text"],
-        input[type="date"],
-        input[type="number"],
-        textarea,
-        input[type="file"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: #fff;
-            color: var(--text);
-            font: inherit;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 140px;
-        }
-        button,
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 26px;
-            border: none;
-            border-radius: 999px;
-            background: var(--accent);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform .2s ease, background .2s ease;
-            text-decoration: none;
-        }
-        button:hover,
-        .btn:hover {
-            background: var(--accent-dark);
-            transform: translateY(-1px);
-        }
-        .upload-label {
-            display: inline-flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 16px;
-            border: 1px dashed var(--border);
-            border-radius: 16px;
-            background: #fff8f0;
-            color: var(--muted);
-            cursor: pointer;
-        }
-        .upload-label span {
-            display: block;
-        }
-        .upload-label input {
-            display: none;
-        }
-        span.required {
-            color: var(--accent);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h2>Přidat knihu</h2>
-            <p class="lead">Vyplňte formulář pro přidání nové knihy do databáze.</p>
-            <form action="../../controllers/BookController.php" method="post" enctype="multipart/form-data">
-                <div class="field">
-                    <label for="title">Název knihy <span class="required">*</span></label>
-                    <input type="text" id="title" name="title" required>
-                </div>
-                <div class="field">
-                    <label for="author">Autor <span class="required">*</span></label>
-                    <input type="text" id="author" name="author" required>
-                </div>
-                <div class="field">
-                    <label for="isbn">ISBN <span class="required">*</span></label>
-                    <input type="text" id="isbn" name="isbn" required>
-                </div>
-                <div class="field">
-                    <label for="published_date">Datum vydání</label>
-                    <input type="date" id="published_date" name="published_date">
-                </div>
-                <div class="field">
-                    <label for="price">Cena knihy</label>
-                    <input type="number" id="price" name="price" step="0.5">
-                </div>
-                <div class="field">
-                    <label for="description">Popis</label>
-                    <textarea id="description" name="description" rows="5"></textarea>
-                </div>
-                <div class="field">
-                    <label class="upload-label" for="images">
-                        <span>Obrázky (můžete nahrát více)</span>
-                        <span>JPG / PNG / WebP – více souborů najednou</span>
-                        <input type="file" id="images" name="images[]" multiple accept="image/*">
-                    </label>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
+
+<main class="container mx-auto px-6 pb-10 pt-6 flex-grow">
+    <div class="bg-white border border-[#f6e6da] rounded-xl overflow-hidden shadow-lg p-8">
+        <h2 class="text-2xl font-semibold mb-2 text-[#6b291f]">Přidat knihu</h2>
+        <p class="text-[#6b291f] mb-6">Vyplňte formulář pro přidání nové knihy do databáze.</p>
+
+        <form action="../../controllers/BookController.php" method="post" enctype="multipart/form-data" class="grid gap-4">
+            <div class="field">
+                <label for="title" class="text-sm font-medium">Název knihy <span class="text-[#c1121f]">*</span></label>
+                <input type="text" id="title" name="title" required class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div class="field">
+                <label for="author" class="text-sm font-medium">Autor <span class="text-[#c1121f]">*</span></label>
+                <input type="text" id="author" name="author" required class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div class="field">
+                <label for="isbn" class="text-sm font-medium">ISBN <span class="text-[#c1121f]">*</span></label>
+                <input type="text" id="isbn" name="isbn" required class="w-full p-3 rounded-md border border-[#f0ded5]">
+            </div>
+
+            <div class="field grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="published_date" class="text-sm font-medium">Datum vydání</label>
+                    <input type="date" id="published_date" name="published_date" class="w-full p-3 rounded-md border border-[#f0ded5]">
                 </div>
                 <div>
-                    <button type="submit">Přidat knihu</button>
+                    <label for="price" class="text-sm font-medium">Cena knihy</label>
+                    <input type="number" id="price" name="price" step="0.5" class="w-full p-3 rounded-md border border-[#f0ded5]">
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="field">
+                <label for="description" class="text-sm font-medium">Popis</label>
+                <textarea id="description" name="description" rows="5" class="w-full p-3 rounded-md border border-[#f0ded5]"></textarea>
+            </div>
+
+            <div class="field md:col-span-2">
+                <label class="block text-xs font-semibold text-[#6b291f] mb-2 uppercase tracking-wider">Obrázky knihy</label>
+                <div class="w-full">
+                    <label for="images" class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-white/5 hover:bg-white/10 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-3 pb-2">
+                            <span id="file-title" class="text-sm text-[#6b291f] font-semibold">Klikni pro výběr souborů</span>
+                            <span id="file-info" class="text-xs text-[#6b291f] mt-1 text-center px-4">Žádné soubory nebyly vybrány</span>
+                        </div>
+                        <input type="file" id="images" name="images[]" multiple accept="image/*" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="bg-[#c1121f] hover:bg-[#930f1b] text-[#fdf0d5] px-4 py-2 rounded-md font-bold">Přidat knihu</button>
+            </div>
+        </form>
     </div>
-</body>
-</html>
+
+    <script>
+        const fileInput = document.getElementById('images');
+        const fileTitle = document.getElementById('file-title');
+        const fileInfo = document.getElementById('file-info');
+
+        fileInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+
+            if (!files || files.length === 0) {
+                fileTitle.textContent = 'Klikněte pro výběr souborů';
+                fileTitle.className = 'text-sm text-[#6b291f] font-semibold';
+                fileInfo.textContent = 'Žádné soubory nebyly vybrány';
+            } else if (files.length === 1) {
+                fileTitle.textContent = 'Soubor připraven';
+                fileTitle.className = 'text-sm text-[#c1121f] font-bold';
+                fileInfo.textContent = files[0].name;
+            } else {
+                fileTitle.textContent = 'Soubory připraveny';
+                fileTitle.className = 'text-sm text-[#c1121f] font-bold';
+                fileInfo.textContent = 'Vybráno celkem: ' + files.length + ' souborů';
+            }
+        });
+    </script>
+
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>

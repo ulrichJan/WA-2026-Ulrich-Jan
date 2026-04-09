@@ -1,6 +1,7 @@
 <?php
 
 require_once 'Database.php';
+require_once __DIR__ . '/../dto/BookDTO.php';
 
 class Book {
     private $conn;
@@ -49,6 +50,33 @@ class Book {
         return false;
     }
 
+    // New: create from DTO
+    public function createFromDTO(BookDTO $dto) {
+        $query = "INSERT INTO " . $this->table_name . " SET title=:title, author=:author, isbn=:isbn, published_date=:published_date, price=:price, description=:description, images=:images";
+
+        $stmt = $this->conn->prepare($query);
+
+        // Sanitize incoming DTO data
+        $title = htmlspecialchars(strip_tags($dto->title));
+        $author = htmlspecialchars(strip_tags($dto->author));
+        $isbn = htmlspecialchars(strip_tags($dto->isbn));
+        $published_date = htmlspecialchars(strip_tags($dto->published_date ?? ''));
+        $price = htmlspecialchars(strip_tags($dto->price ?? ''));
+        $description = htmlspecialchars(strip_tags($dto->description ?? ''));
+        $images = json_encode($dto->images ?? []);
+
+        // Bind values
+        $stmt->bindParam(":title", $title);
+        $stmt->bindParam(":author", $author);
+        $stmt->bindParam(":isbn", $isbn);
+        $stmt->bindParam(":published_date", $published_date);
+        $stmt->bindParam(":price", $price);
+        $stmt->bindParam(":description", $description);
+        $stmt->bindParam(":images", $images);
+
+        return $stmt->execute();
+    }
+
     public function getAll() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
         $stmt = $this->conn->prepare($query);
@@ -75,6 +103,31 @@ class Book {
         $price = htmlspecialchars(strip_tags($price));
         $description = htmlspecialchars(strip_tags($description));
         $images = json_encode($images);
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':title' => $title,
+            ':author' => $author,
+            ':isbn' => $isbn,
+            ':published_date' => $published_date,
+            ':price' => $price,
+            ':description' => $description,
+            ':images' => $images
+        ]);
+    }
+
+    // New: update from DTO
+    public function updateFromDTO($id, BookDTO $dto) {
+        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+
+        $title = htmlspecialchars(strip_tags($dto->title));
+        $author = htmlspecialchars(strip_tags($dto->author));
+        $isbn = htmlspecialchars(strip_tags($dto->isbn));
+        $published_date = htmlspecialchars(strip_tags($dto->published_date ?? ''));
+        $price = htmlspecialchars(strip_tags($dto->price ?? ''));
+        $description = htmlspecialchars(strip_tags($dto->description ?? ''));
+        $images = json_encode($dto->images ?? []);
 
         return $stmt->execute([
             ':id' => $id,

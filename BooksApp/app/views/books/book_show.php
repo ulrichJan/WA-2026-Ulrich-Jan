@@ -1,138 +1,69 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail knihy</title>
-    <style>
-        :root {
-            --bg: #fdf0d5;
-            --surface: #ffffff;
-            --accent: #c1121f;
-            --accent-dark: #930f1b;
-            --text: #222222;
-            --muted: #5d4f47;
-            --border: #ecd6c2;
-            --radius: 20px;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, system-ui, sans-serif;
-            background: linear-gradient(180deg, var(--bg) 0%, #fff9e9 100%);
-            color: var(--text);
-        }
-        .container {
-            width: min(1100px, calc(100% - 32px));
-            margin: 0 auto;
-            padding: 32px 0;
-        }
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            border: 1px solid rgba(193,18,31,0.12);
-            box-shadow: 0 28px 80px rgba(0,0,0,0.08);
-            padding: 32px;
-        }
-        .back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-        }
-        .back:hover { color: var(--accent-dark); }
-        h2 {
-            margin: 0 0 8px;
-            font-size: clamp(2rem, 2.5vw, 2.4rem);
-        }
-        .detail-grid {
-            display: grid;
-            gap: 18px;
-            margin-top: 24px;
-        }
-        .detail-grid > div {
-            padding: 18px;
-            border-radius: 18px;
-            background: #fff8f0;
-            border: 1px solid rgba(193,18,31,0.12);
-        }
-        .detail-grid dt {
-            font-weight: 700;
-            color: #423a37;
-            margin-bottom: 8px;
-        }
-        .detail-grid dd {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-        .images-list {
-            display: grid;
-            gap: 10px;
-        }
-        .images-list div {
-            padding: 12px 14px;
-            border-radius: 14px;
-            background: #fff;
-            border: 1px solid var(--border);
-            color: var(--text);
-            word-break: break-word;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <a class="back" href="BookController.php?action=index">&larr; Zpět na seznam knih</a>
-            <h2>Detail knihy</h2>
-            <p>Prohlédněte si údaje o knize <strong><?= htmlspecialchars($book['title']) ?></strong>.</p>
-            <div class="detail-grid">
-                <div>
-                    <dl>
-                        <dt>ID</dt>
-                        <dd><?= htmlspecialchars($book['id']) ?></dd>
-                        <dt>Název</dt>
-                        <dd><?= htmlspecialchars($book['title']) ?></dd>
-                        <dt>Autor</dt>
-                        <dd><?= htmlspecialchars($book['author']) ?></dd>
-                        <dt>ISBN</dt>
-                        <dd><?= htmlspecialchars($book['isbn']) ?></dd>
-                        <dt>Datum vydání</dt>
-                        <dd><?= htmlspecialchars($book['published_date']) ?></dd>
-                        <dt>Cena</dt>
-                        <dd><?= htmlspecialchars($book['price']) ?></dd>
-                    </dl>
-                </div>
-                <div>
-                    <dl>
-                        <dt>Popis</dt>
-                        <dd><?= nl2br(htmlspecialchars($book['description'])) ?></dd>
-                        <dt>Obrázky</dt>
-                        <dd class="images-list">
-                            <?php
-                                // Render actual <img> tags for stored image paths
-                                $images = json_decode($book['images'], true);
-                                if (is_array($images) && count($images) > 0):
-                                    foreach ($images as $image):
-                                        $src = htmlspecialchars($image);
-                                        echo '<div><img src="' . $src . '" alt="obrázek" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;"></div>';
-                                    endforeach;
-                                elseif (!empty($book['images'])):
-                                    $src = htmlspecialchars($book['images']);
-                                    echo '<div><img src="' . $src . '" alt="obrázek" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;"></div>';
-                                else:
-                                    echo '<div>Žádné obrázky</div>';
-                                endif;
-                            ?>
-                        </dd>
-                    </dl>
-                </div>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
+
+<main class="container mx-auto px-6 pb-10 pt-6 flex-grow">
+    <div class="bg-white border border-[#f6e6da] rounded-xl overflow-hidden shadow-lg p-8">
+        <a class="text-[#c1121f] font-semibold" href="BookController.php?action=index">&larr; Zpět na seznam knih</a>
+        <h2 class="text-2xl font-semibold mt-4 text-[#6b291f]">Detail knihy</h2>
+        <p class="text-[#6b291f]">Prohlédněte si údaje o knize <strong><?= htmlspecialchars($book['title']) ?></strong>.</p>
+
+        <div class="grid md:grid-cols-2 gap-6 mt-6">
+            <div class="p-4 rounded-md">
+                <dl>
+                    <dt class="font-semibold text-[#6b291f]">ID</dt>
+                    <dd class="text-[#6b291f] mb-3"><?= htmlspecialchars($book['id']) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">Název</dt>
+                    <dd class="text-[#6b291f] mb-3"><?= htmlspecialchars($book['title']) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">Autor</dt>
+                    <dd class="text-[#6b291f] mb-3"><?= htmlspecialchars($book['author']) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">ISBN</dt>
+                    <dd class="text-[#6b291f] mb-3"><?= htmlspecialchars($book['isbn']) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">Datum vydání</dt>
+                    <dd class="text-[#6b291f] mb-3"><?= htmlspecialchars($book['published_date']) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">Cena</dt>
+                    <dd class="text-[#6b291f]"><?= htmlspecialchars($book['price']) ?></dd>
+                </dl>
+            </div>
+
+            <div class="p-4 rounded-md">
+                <dl>
+                    <dt class="font-semibold text-[#6b291f]">Popis</dt>
+                    <dd class="text-[#6b291f] mb-4"><?= nl2br(htmlspecialchars($book['description'])) ?></dd>
+
+                    <dt class="font-semibold text-[#6b291f]">Obrázky</dt>
+                    <dd class="images-list">
+                        <?php
+                            $images = json_decode($book['images'], true);
+                            if (is_array($images) && count($images) > 0):
+                                foreach ($images as $image):
+                                    $img = $image;
+                                    // If image looks like a path/URL use as-is, otherwise assume filename and prefix with /uploads/
+                                    if (strpos($img, '/') === false && strpos($img, 'http') === false) {
+                                        $img = '/uploads/' . $img;
+                                    }
+                                    $src = htmlspecialchars($img);
+                                    echo '<div class="mb-3"><img src="' . $src . '" alt="obrázek" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;"></div>';
+                                endforeach;
+                            elseif (!empty($book['images'])):
+                                $img = $book['images'];
+                                if (strpos($img, '/') === false && strpos($img, 'http') === false) {
+                                    $img = '/uploads/' . $img;
+                                }
+                                $src = htmlspecialchars($img);
+                                echo '<div class="mb-3"><img src="' . $src . '" alt="obrázek" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;"></div>';
+                            else:
+                                echo '<div class="text-[#6b291f] italic">Žádné obrázky</div>';
+                            endif;
+                        ?>
+                    </dd>
+                </dl>
             </div>
         </div>
     </div>
-</body>
-</html>
+</main>
+
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>
