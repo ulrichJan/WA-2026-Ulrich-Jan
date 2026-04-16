@@ -2,9 +2,9 @@
 
 <main class="container mx-auto px-6 pb-10 pt-6 flex-grow">
     <div class="flex justify-between items-end mb-6">
-        <h2 class="text-3xl font-light tracking-widest text-[#6b291f] uppercase">Dostupné knihy</h2>
-        <a class="bg-[#c1121f] hover:bg-[#930f1b] text-[#fdf0d5] px-4 py-2 rounded-md font-bold shadow-sm" href="../views/books/book_create.php">Přidat novou knihu</a>
-    </div>
+    <h2 class="text-3xl font-light tracking-widest text-[#6b291f] uppercase">Dostupné knihy</h2>
+    <a class="bg-[#c1121f] hover:bg-[#930f1b] text-[#fdf0d5] px-4 py-2 rounded-md font-bold shadow-sm" href="/WA-2026-Ulrich-Jan/BooksApp/app/controllers/BookController.php?action=create">Přidat novou knihu</a>
+  </div>
 
     <div class="bg-white border border-[#f6e6da] rounded-xl overflow-hidden shadow-lg p-6">
       <?php if (empty($books)): ?>

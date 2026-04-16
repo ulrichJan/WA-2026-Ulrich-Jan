@@ -42,6 +42,11 @@ class BookController {
         include '../views/books/book_index.php';
     }
 
+    //  Show create form
+    public function create() {
+        include '../views/books/book_create.php';
+    }
+
     public function edit($id = null) {
         if ($id === null) {
             $id = $_GET['id'] ?? null;
@@ -245,6 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $controller->edit($_GET['id'] ?? null);
 } elseif (isset($_GET['action']) && $_GET['action'] === 'index') {
     $controller->index();
+} elseif (isset($_GET['action']) && $_GET['action'] === 'create') {
+    $controller->create();
 } else {
     echo 'Neplatný požadavek. Zadejte formulář pro přidání knihy nebo přejděte na seznam knih.';
 }

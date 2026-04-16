@@ -5,7 +5,7 @@
         <h2 class="text-2xl font-semibold mb-2 text-[#6b291f]">Přidat knihu</h2>
         <p class="text-[#6b291f] mb-6">Vyplňte formulář pro přidání nové knihy do databáze.</p>
 
-        <form action="../../controllers/BookController.php" method="post" enctype="multipart/form-data" class="grid gap-4">
+        <form action="/WA-2026-Ulrich-Jan/BooksApp/app/controllers/BookController.php" method="post" enctype="multipart/form-data" class="grid gap-4">
             <div class="field">
                 <label for="title" class="text-sm font-medium">Název knihy <span class="text-[#c1121f]">*</span></label>
                 <input type="text" id="title" name="title" required class="w-full p-3 rounded-md border border-[#f0ded5]">
