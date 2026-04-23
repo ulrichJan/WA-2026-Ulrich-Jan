@@ -96,8 +96,8 @@ class Book {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function update($id, $title, $author, $isbn, $published_date, $price, $description, $images = []) {
-        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images WHERE id = :id";
+    public function update($id, $title, $author, $isbn, $published_date, $price, $description, $images = [], $updatedBy = null) {
+        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images, updated_by = :updated_by WHERE id = :id";
         $stmt = $this->conn->prepare($query);
 
         $title = htmlspecialchars(strip_tags($title));
@@ -116,13 +116,14 @@ class Book {
             ':published_date' => $published_date,
             ':price' => $price,
             ':description' => $description,
-            ':images' => $images
+            ':images' => $images,
+            ':updated_by' => $updatedBy
         ]);
     }
 
     // New: update from DTO
-    public function updateFromDTO($id, BookDTO $dto) {
-        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images WHERE id = :id";
+    public function updateFromDTO($id, BookDTO $dto, $updatedBy = null) {
+        $query = "UPDATE " . $this->table_name . " SET title = :title, author = :author, isbn = :isbn, published_date = :published_date, price = :price, description = :description, images = :images, updated_by = :updated_by WHERE id = :id";
         $stmt = $this->conn->prepare($query);
 
         $title = htmlspecialchars(strip_tags($dto->title));
@@ -141,7 +142,8 @@ class Book {
             ':published_date' => $published_date,
             ':price' => $price,
             ':description' => $description,
-            ':images' => $images
+            ':images' => $images,
+            ':updated_by' => $updatedBy
         ]);
     }
 

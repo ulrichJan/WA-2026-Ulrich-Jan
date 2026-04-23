@@ -164,7 +164,7 @@ class BookController {
 
         $dto->images = $uploadedImages;
 
-        $isUpdated = $book->updateFromDTO($id, $dto);
+        $isUpdated = $book->updateFromDTO($id, $dto, $currentUserId);
 
         if ($isUpdated) {
             $this->addSuccessMessage('Kniha byla úspěšně upravena.');
