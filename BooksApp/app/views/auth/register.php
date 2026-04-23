@@ -29,7 +29,7 @@
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Heslo <span class="text-[#c1121f]">*</span></label>
-                           <input type="password" id="password" name="password" required minlength="8" pattern="(?=.*\\d).{8,}" title="Minimálně 8 znaků a alespoň 1 číslice" 
+                           <input type="password" id="password" name="password" required minlength="8" pattern="(?=.*\d).{8,}" title="Minimálně 8 znaků a alespoň 1 číslice" 
                                class="w-full p-3 rounded-md border border-[#f0ded5]">
                     </div>
 

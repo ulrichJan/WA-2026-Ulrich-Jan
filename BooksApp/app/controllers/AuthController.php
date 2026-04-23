@@ -20,8 +20,8 @@ class AuthController {
             $nickname = htmlspecialchars($_POST['nickname'] ?? '');
 
             // Hesla neočišťujeme přes htmlspecialchars, protože by to mohlo rozbít speciální znaky v hesle
-            $password = $_POST['password'] ?? '';
-            $passwordConfirm = $_POST['password_confirm'] ?? '';
+            $password = trim($_POST['password'] ?? '');
+            $passwordConfirm = trim($_POST['password_confirm'] ?? '');
 
             // Základní validace na straně serveru
             if (empty($username) || empty($email) || empty($password)) {

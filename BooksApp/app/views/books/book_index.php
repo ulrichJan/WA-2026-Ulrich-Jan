@@ -52,8 +52,11 @@
                       </td>
                       <td class="p-3 align-top">
                         <a href="?action=show&id=<?= htmlspecialchars($book['id']) ?>" class="text-[#c1121f] font-semibold mr-3">Detail</a>
-                        <a href="?action=edit&id=<?= htmlspecialchars($book['id']) ?>" class="text-[#c1121f] font-semibold mr-3">Upravit</a>
-                        <a href="?action=delete&id=<?= htmlspecialchars($book['id']) ?>" onclick="return confirm('Opravdu chcete tuto knihu smazat?')" class="text-[#c1121f] font-semibold">Smazat</a>
+
+                        <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($book['created_by'] ?? 0)): ?>
+                            <a href="?action=edit&id=<?= htmlspecialchars($book['id']) ?>" class="text-[#c1121f] font-semibold mr-3">Upravit</a>
+                            <a href="?action=delete&id=<?= htmlspecialchars($book['id']) ?>" onclick="return confirm('Opravdu chcete tuto knihu smazat?')" class="text-[#c1121f] font-semibold">Smazat</a>
+                        <?php endif; ?>
                       </td>
                     </tr>
                   <?php endforeach; ?>

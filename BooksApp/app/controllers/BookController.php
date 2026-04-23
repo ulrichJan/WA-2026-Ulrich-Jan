@@ -7,6 +7,12 @@ require_once '../dto/BookDTO.php';
 class BookController {
 
     public function store() {
+        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro přidání knihy se musíte nejprve přihlásit.');
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Build DTO from POST
             $data = [
@@ -26,7 +32,10 @@ class BookController {
             $uploaded = $this->processImageUploads();
             $dto->images = $uploaded;
 
-            if ($bookModel->createFromDTO($dto)) {
+            // Pass current user id to model so we store `created_by`
+            $userId = $_SESSION['user_id'] ?? null;
+
+            if ($bookModel->createFromDTO($dto, $userId)) {
                 $this->addSuccessMessage('Kniha byla úspěšně přidána.');
                 header("Location: BookController.php?action=index");
                 exit;
@@ -44,12 +53,26 @@ class BookController {
 
     //  Show create form
     public function create() {
+        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro přidání knihy se musíte nejprve přihlásit.');
+
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
         include '../views/books/book_create.php';
     }
 
     public function edit($id = null) {
         if ($id === null) {
             $id = $_GET['id'] ?? null;
+        }
+
+        // Kontrola přihlášení
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro úpravu knihy se musíte nejprve přihlásit.');
+            header('Location: AuthController.php?action=login');
+            exit;
         }
 
         if (!$id) {
@@ -67,11 +90,25 @@ class BookController {
             exit;
         }
 
+        // Kontrola vlastnictví
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        if ($currentUserId === null || (int)$bookData['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění upravovat tuto knihu, protože nejste jejím autorem.');
+            header("Location: BookController.php?action=index");
+            exit;
+        }
+
         $book = $bookData;
         include '../views/books/book_edit.php';
     }
 
     public function update($id = null) {
+        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro úpravu knihy se musíte nejprve přihlásit.');
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
         if ($id === null) {
             $id = $_GET['id'] ?? null;
         }
@@ -102,6 +139,14 @@ class BookController {
 
         $book = new Book();
         $existingBook = $book->getById($id);
+
+        // 🛡️ Kontrola vlastnictví před provedením aktualizace
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        if ($currentUserId === null || (int)$existingBook['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění upravovat tuto knihu, protože nejste jejím autorem.');
+            header("Location: BookController.php?action=index");
+            exit;
+        }
         $uploadedImages = [];
 
         // If files were submitted, try to process them
@@ -157,6 +202,12 @@ class BookController {
     }
 
     public function delete($id = null) {
+        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro smazání knihy se musíte nejprve přihlásit.');
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
         if ($id === null) {
             $id = $_GET['id'] ?? null;
         }
@@ -168,6 +219,16 @@ class BookController {
         }
 
         $book = new Book();
+        $bookData = $book->getById($id);
+
+        // 🛡️ Kontrola vlastnictví před smazáním
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        if ($currentUserId === null || (int)$bookData['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění smazat tuto knihu, protože nejste jejím autorem.');
+            header("Location: BookController.php?action=index");
+            exit;
+        }
+
         $isDeleted = $book->delete($id);
 
         if ($isDeleted) {

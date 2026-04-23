@@ -14,14 +14,15 @@ class Book {
     public $price;
     public $description;
     public $images;
+    public $created_by;
 
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
     }
 
-    public function create() {
-        $query = "INSERT INTO " . $this->table_name . " SET title=:title, author=:author, isbn=:isbn, published_date=:published_date, price=:price, description=:description, images=:images";
+    public function create($userId = null) {
+        $query = "INSERT INTO " . $this->table_name . " SET title=:title, author=:author, isbn=:isbn, published_date=:published_date, price=:price, description=:description, images=:images, created_by=:created_by";
 
         $stmt = $this->conn->prepare($query);
 
@@ -33,6 +34,7 @@ class Book {
         $this->price = htmlspecialchars(strip_tags($this->price));
         $this->description = htmlspecialchars(strip_tags($this->description));
         $this->images = json_encode($this->images); // Assuming images is an array of paths
+        $this->created_by = $userId;
 
         // Bind values
         $stmt->bindParam(":title", $this->title);
@@ -42,6 +44,7 @@ class Book {
         $stmt->bindParam(":price", $this->price);
         $stmt->bindParam(":description", $this->description);
         $stmt->bindParam(":images", $this->images);
+        $stmt->bindParam(":created_by", $this->created_by);
 
         if($stmt->execute()) {
             return true;
@@ -51,8 +54,8 @@ class Book {
     }
 
     // New: create from DTO
-    public function createFromDTO(BookDTO $dto) {
-        $query = "INSERT INTO " . $this->table_name . " SET title=:title, author=:author, isbn=:isbn, published_date=:published_date, price=:price, description=:description, images=:images";
+    public function createFromDTO(BookDTO $dto, $userId = null) {
+        $query = "INSERT INTO " . $this->table_name . " SET title=:title, author=:author, isbn=:isbn, published_date=:published_date, price=:price, description=:description, images=:images, created_by=:created_by";
 
         $stmt = $this->conn->prepare($query);
 
@@ -73,6 +76,7 @@ class Book {
         $stmt->bindParam(":price", $price);
         $stmt->bindParam(":description", $description);
         $stmt->bindParam(":images", $images);
+        $stmt->bindValue(":created_by", $userId, $userId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
 
         return $stmt->execute();
     }
