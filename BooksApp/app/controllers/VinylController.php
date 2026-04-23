@@ -1,32 +1,32 @@
 <?php
 session_start();
 
-require_once '../models/Book.php';
-require_once '../dto/BookDTO.php';
+require_once '../models/Vinyl.php';
+require_once '../dto/VinylDTO.php';
 
-class BookController {
+class VinylController {
 
     public function store() {
         // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
         if (!isset($_SESSION['user_id'])) {
-            $this->addErrorMessage('Pro přidání knihy se musíte nejprve přihlásit.');
+            $this->addErrorMessage('Pro přidání vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Build DTO from POST
             $data = [
-                'title' => $_POST['title'] ?? '',
-                'author' => $_POST['author'] ?? '',
-                'isbn' => $_POST['isbn'] ?? '',
-                'published_date' => $_POST['published_date'] ?? '',
+                'album_name' => $_POST['album_name'] ?? '',
+                'artist' => $_POST['artist'] ?? '',
+                'release_year' => $_POST['release_year'] ?? '',
+                'genre' => $_POST['genre'] ?? '',
                 'price' => $_POST['price'] ?? '',
-                'description' => $_POST['description'] ?? '',
+                'album_cover' => $this->processImageUploads(),
             ];
 
-            $dto = new BookDTO($data);
+            $dto = new VinylDTO($data);
 
-            $bookModel = new Book();
+            $vinylModel = new Vinyl();
 
             // Handle image uploads and attach to DTO (processed by controller helper)
             $uploaded = $this->processImageUploads();
@@ -35,7 +35,7 @@ class BookController {
             // Pass current user id to model so we store `created_by`
             $userId = $_SESSION['user_id'] ?? null;
 
-            if ($bookModel->createFromDTO($dto, $userId)) {
+            if ($vinylModel->createFromDTO($dto, $userId)) {
                 $this->addSuccessMessage('Kniha byla úspěšně přidána.');
                 header("Location: BookController.php?action=index");
                 exit;
@@ -46,21 +46,21 @@ class BookController {
     }
 
     public function index() {
-        $book = new Book();
-        $books = $book->getAll();
-        include '../views/books/book_index.php';
+        $vinyl = new Vinyl();
+        $vinyls = $vinyl->getAll();
+        include '../views/vinyls/vinyl_index.php';
     }
 
     //  Show create form
     public function create() {
         // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
         if (!isset($_SESSION['user_id'])) {
-            $this->addErrorMessage('Pro přidání knihy se musíte nejprve přihlásit.');
+            $this->addErrorMessage('Pro přidání vinylu se musíte nejprve přihlásit.');
 
             header('Location: AuthController.php?action=login');
             exit;
         }
-        include '../views/books/book_create.php';
+        include '../views/vinyls/vinyl_create.php';
     }
 
     public function edit($id = null) {
@@ -70,42 +70,42 @@ class BookController {
 
         // Kontrola přihlášení
         if (!isset($_SESSION['user_id'])) {
-            $this->addErrorMessage('Pro úpravu knihy se musíte nejprve přihlásit.');
+            $this->addErrorMessage('Pro úpravu vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
 
         if (!$id) {
-            $this->addErrorMessage('Nebylo zadáno ID knihy k úpravě.');
-            header("Location: BookController.php?action=index");
+            $this->addErrorMessage('Nebylo zadáno ID vinylu k úpravě.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $book = new Book();
-        $bookData = $book->getById($id);
+        $vinyl = new Vinyl();
+        $vinylData = $vinyl->getById($id);
 
-        if (!$bookData) {
-            $this->addErrorMessage('Požadovaná kniha nebyla v databázi nalezena.');
-            header("Location: BookController.php?action=index");
+        if (!$vinylData) {
+            $this->addErrorMessage('Požadovaný vinyl nebyl v databázi nalezen.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
         // Kontrola vlastnictví
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$bookData['created_by'] !== (int)$currentUserId) {
-            $this->addErrorMessage('Nemáte oprávnění upravovat tuto knihu, protože nejste jejím autorem.');
-            header("Location: BookController.php?action=index");
+        if ($currentUserId === null || (int)$vinylData['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $book = $bookData;
-        include '../views/books/book_edit.php';
+        $vinyl = $vinylData;
+        include '../views/vinyls/vinyl_edit.php';
     }
 
     public function update($id = null) {
         // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
         if (!isset($_SESSION['user_id'])) {
-            $this->addErrorMessage('Pro úpravu knihy se musíte nejprve přihlásit.');
+            $this->addErrorMessage('Pro úpravu vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
@@ -127,24 +127,23 @@ class BookController {
 
         // Build DTO from POST
         $data = [
-            'title' => $_POST['title'] ?? '',
-            'author' => $_POST['author'] ?? '',
-            'isbn' => $_POST['isbn'] ?? '',
-            'published_date' => $_POST['published_date'] ?? '',
+            'album_name' => $_POST['album_name'] ?? '',
+            'artist' => $_POST['artist'] ?? '',
+            'release_year' => $_POST['release_year'] ?? '',
+            'genre' => $_POST['genre'] ?? '',
             'price' => $_POST['price'] ?? '',
-            'description' => $_POST['description'] ?? '',
         ];
 
-        $dto = new BookDTO($data);
+        $dto = new VinylDTO($data);
 
-        $book = new Book();
-        $existingBook = $book->getById($id);
+        $vinyl = new Vinyl();
+        $existingVinyl = $vinyl->getById($id);
 
-        // 🛡️ Kontrola vlastnictví před provedením aktualizace
+        // Kontrola vlastnictví před provedením aktualizace
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$existingBook['created_by'] !== (int)$currentUserId) {
-            $this->addErrorMessage('Nemáte oprávnění upravovat tuto knihu, protože nejste jejím autorem.');
-            header("Location: BookController.php?action=index");
+        if ($currentUserId === null || (int)$existingVinyl['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
         $uploadedImages = [];
@@ -155,16 +154,16 @@ class BookController {
         }
 
         // Rescue: if no new images were uploaded (or processing yielded none), keep existing images
-        if (empty($uploadedImages) && $existingBook && !empty($existingBook['images'])) {
-            $uploadedImages = json_decode($existingBook['images'], true);
+        if (empty($uploadedImages) && $existingVinyl && !empty($existingVinyl['album_cover'])) {
+            $uploadedImages = json_decode($existingVinyl['album_cover'], true);
             if (!is_array($uploadedImages)) {
-                $uploadedImages = [$existingBook['images']];
+                $uploadedImages = [$existingVinyl['album_cover']];
             }
         }
 
-        $dto->images = $uploadedImages;
+        $dto->album_cover = $uploadedImages;
 
-        $isUpdated = $book->updateFromDTO($id, $dto, $currentUserId);
+        $isUpdated = $vinyl->updateFromDTO($id, $dto, $currentUserId);
 
         if ($isUpdated) {
             $this->addSuccessMessage('Kniha byla úspěšně upravena.');
@@ -188,17 +187,17 @@ class BookController {
             exit;
         }
 
-        $book = new Book();
-        $bookData = $book->getById($id);
+        $vinyl = new Vinyl();
+        $vinylData = $vinyl->getById($id);
 
-        if (!$bookData) {
-            $this->addErrorMessage('Kniha nebyla nalezena.');
-            header("Location: BookController.php?action=index");
+        if (!$vinylData) {
+            $this->addErrorMessage('Vinyl nebyl nalezen.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $book = $bookData;
-        include '../views/books/book_show.php';
+        $vinyl = $vinylData;
+        include '../views/vinyls/vinyl_show.php';
     }
 
     public function delete($id = null) {
@@ -213,30 +212,30 @@ class BookController {
         }
 
         if (!$id) {
-            $this->addErrorMessage('Nebylo zadáno ID knihy ke smazání.');
-            header("Location: BookController.php?action=index");
+            $this->addErrorMessage('Nebylo zadáno ID vinylu ke smazání.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $book = new Book();
-        $bookData = $book->getById($id);
+        $vinyl = new Vinyl();
+        $vinylData = $vinyl->getById($id);
 
         // 🛡️ Kontrola vlastnictví před smazáním
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$bookData['created_by'] !== (int)$currentUserId) {
-            $this->addErrorMessage('Nemáte oprávnění smazat tuto knihu, protože nejste jejím autorem.');
-            header("Location: BookController.php?action=index");
+        if ($currentUserId === null || (int)$vinylData['created_by'] !== (int)$currentUserId) {
+            $this->addErrorMessage('Nemáte oprávnění smazat tento vinyl, protože nejste jeho autorem.');
+            header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $isDeleted = $book->delete($id);
+        $isDeleted = $vinyl->delete($id);
 
         if ($isDeleted) {
-            $this->addSuccessMessage('Kniha byla trvale smazána z databáze.');
+            $this->addSuccessMessage('Vinyl byl trvale smazán z databáze.');
         } else {
-            $this->addErrorMessage('Nastala chyba. Knihu se nepodařilo smazat.');
+            $this->addErrorMessage('Nastala chyba. Vinyl se nepodařilo smazat.');
         }
-        header("Location: BookController.php?action=index");
+        header("Location: VinylController.php?action=index");
         exit;
     }
 
@@ -266,13 +265,13 @@ class BookController {
         }
 
         // Zkontrolujeme, zda byl odeslán alespoň jeden soubor
-        if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-            $fileCount = count($_FILES['images']['name']);
+        if (isset($_FILES['album_cover']) && !empty($_FILES['album_cover']['name'][0])) {
+            $fileCount = count($_FILES['album_cover']['name']);
 
             for ($i = 0; $i < $fileCount; $i++) {
-                if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
-                    $tmpName = $_FILES['images']['tmp_name'][$i];
-                    $originalName = basename($_FILES['images']['name'][$i]);
+                if ($_FILES['album_cover']['error'][$i] === UPLOAD_ERR_OK) {
+                    $tmpName = $_FILES['album_cover']['tmp_name'][$i];
+                    $originalName = basename($_FILES['album_cover']['name'][$i]);
                     $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
                     $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
@@ -280,7 +279,7 @@ class BookController {
                         continue;
                     }
 
-                    $newName = 'book_' . uniqid() . '_' . substr(md5(mt_rand()), 0, 4) . '.' . $fileExtension;
+                    $newName = 'vinyl_' . uniqid() . '_' . substr(md5(mt_rand()), 0, 4) . '.' . $fileExtension;
                     $targetFilePath = $uploadDir . $newName;
 
                     if (move_uploaded_file($tmpName, $targetFilePath)) {
@@ -295,7 +294,7 @@ class BookController {
 }
 
 // Instantiate and route the request
-$controller = new BookController();
+$controller = new VinylController();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_GET['action']) && $_GET['action'] === 'update') {
@@ -314,6 +313,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } elseif (isset($_GET['action']) && $_GET['action'] === 'create') {
     $controller->create();
 } else {
-    echo 'Neplatný požadavek. Zadejte formulář pro přidání knihy nebo přejděte na seznam knih.';
+    echo 'Neplatný požadavek. Zadejte formulář pro přidání vinylu nebo přejděte na seznam vinylů.';
 }
 ?>
