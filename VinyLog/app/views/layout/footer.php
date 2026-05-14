@@ -1,7 +1,7 @@
 </main>
 
-    <footer class="mt-auto border-t border-[#E3D5CA] py-8 text-center bg-[#EDEDE9]">
-        <p class="text-[#1a1c1e] text-sm tracking-widest uppercase italic">&copy; WA 2026 - VinyLog</p>
+    <footer class="mt-auto py-8 text-center" style="border-top:1px solid #1a1a1a;">
+        <p style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#383838;">&copy; WA 2026 &mdash; VinyLog</p>
     </footer>
 
 </body>

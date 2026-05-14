@@ -1,79 +1,102 @@
 <?php require_once __DIR__ . '/../layout/header.php'; ?>
 
-<main class="container mx-auto px-6 py-10 flex-grow flex items-center justify-center">
-    <div class="w-full max-w-2xl">
-        <div class="mb-6 text-center">
-            <h2 class="text-3xl font-light tracking-widest text-slate-300 uppercase">Nová registrace</h2>
-            <p class="text-slate-500 italic mt-2 text-sm">Vytvořte si účet pro správu vašeho knižního katalogu.</p>
+<div style="display:flex;align-items:flex-start;justify-content:center;padding:20px 0 40px;animation: fadeUp 0.5s var(--ease-out) both;">
+    <div style="width:100%;max-width:520px;">
+
+        <div style="text-align:center;margin-bottom:28px;">
+            <h2 style="font-size:1.5rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em;margin-bottom:6px;">Nová registrace</h2>
+            <p style="font-size:14px;color:var(--t2);">Vytvořte si účet pro přístup a správu sbírky.</p>
         </div>
-        
-        <div class="bg-white border border-[#f6e6da] rounded-xl overflow-hidden shadow-lg p-8">
-            <form action="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/AuthController.php?action=storeUser" method="post">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <h3 class="text-emerald-400 text-xs font-bold uppercase tracking-widest border-b border-slate-700 pb-2 mb-4">Přihlašovací údaje</h3>
+
+        <div class="auth-card">
+            <form action="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/AuthController.php?action=storeUser"
+                  method="post">
+                <div style="display:flex;flex-direction:column;gap:18px;">
+
+                    <!-- Section: Login credentials -->
+                    <span class="form-section-label">Přihlašovací údaje</span>
+
+                    <div style="animation: fadeUp 0.4s var(--ease-out) 60ms both;">
+                        <label for="username" class="form-label">
+                            Uživatelské jméno <span style="color:var(--red);">*</span>
+                        </label>
+                        <input type="text" id="username" name="username" required
+                               class="input-field" placeholder="jmeno123">
                     </div>
 
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Uživatelské jméno <span class="text-[#c1121f]">*</span></label>
-                        <input type="text" id="username" name="username" required 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
+                    <div style="animation: fadeUp 0.4s var(--ease-out) 100ms both;">
+                        <label for="email" class="form-label">
+                            E-mail <span style="color:var(--red);">*</span>
+                        </label>
+                        <input type="email" id="email" name="email" required
+                               class="input-field" placeholder="vas@email.cz">
                     </div>
 
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">E-mail <span class="text-[#c1121f]">*</span></label>
-                        <input type="email" id="email" name="email" required 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;animation: fadeUp 0.4s var(--ease-out) 140ms both;">
+                        <div>
+                            <label for="password" class="form-label">
+                                Heslo <span style="color:var(--red);">*</span>
+                            </label>
+                            <input type="password" id="password" name="password" required
+                                   minlength="8" pattern="(?=.*\d).{8,}"
+                                   title="Minimálně 8 znaků a alespoň 1 číslice"
+                                   class="input-field" placeholder="min. 8 znaků">
+                        </div>
+                        <div>
+                            <label for="password_confirm" class="form-label">
+                                Potvrzení <span style="color:var(--red);">*</span>
+                            </label>
+                            <input type="password" id="password_confirm" name="password_confirm" required
+                                   minlength="8" class="input-field" placeholder="zopakujte heslo">
+                        </div>
                     </div>
 
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Heslo <span class="text-[#c1121f]">*</span></label>
-                           <input type="password" id="password" name="password" required minlength="8" pattern="(?=.*\d).{8,}" title="Minimálně 8 znaků a alespoň 1 číslice" 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
+                    <!-- Section: Personal info -->
+                    <span class="form-section-label" style="margin-top:8px;">Osobní údaje <span style="font-size:10px;color:var(--t3);font-weight:500;text-transform:none;letter-spacing:0;">(volitelné)</span></span>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;animation: fadeUp 0.4s var(--ease-out) 180ms both;">
+                        <div>
+                            <label for="first_name" class="form-label">Křestní jméno</label>
+                            <input type="text" id="first_name" name="first_name"
+                                   class="input-field" placeholder="Jan">
+                        </div>
+                        <div>
+                            <label for="last_name" class="form-label">Příjmení</label>
+                            <input type="text" id="last_name" name="last_name"
+                                   class="input-field" placeholder="Novák">
+                        </div>
                     </div>
 
-                    <div>
-                        <label for="password_confirm" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Potvrzení hesla <span class="text-[#c1121f]">*</span></label>
-                           <input type="password" id="password_confirm" name="password_confirm" required minlength="8" 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
+                    <div style="animation: fadeUp 0.4s var(--ease-out) 220ms both;">
+                        <label for="nickname" class="form-label">Přezdívka</label>
+                        <input type="text" id="nickname" name="nickname"
+                               class="input-field" placeholder="Jak vám máme říkat?">
                     </div>
 
-                    <div class="md:col-span-2 mt-4">
-                        <h3 class="text-blue-400 text-xs font-bold uppercase tracking-widest border-b border-slate-700 pb-2 mb-4">Osobní údaje (Volitelné)</h3>
-                    </div>
-
-                    <div>
-                        <label for="first_name" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Křestní jméno</label>
-                        <input type="text" id="first_name" name="first_name" 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
-                    </div>
-
-                    <div>
-                        <label for="last_name" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Příjmení</label>
-                        <input type="text" id="last_name" name="last_name" 
-                               class="w-full p-3 rounded-md border border-[#f0ded5]">
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label for="nickname" class="block text-sm font-medium text-[#6b291f] mb-1 uppercase tracking-wider">Zobrazovaná přezdívka</label>
-                        <input type="text" id="nickname" name="nickname" placeholder="Jak vám máme v aplikaci říkat?"
-                               class="w-full p-3 rounded-md border border-[#f0ded5] placeholder-[#a77b6f]">
-                    </div>
-
-                    <div class="md:col-span-2 mt-6">
-                        <button type="submit" 
-                                class="w-full bg-[#c1121f] hover:bg-[#930f1b] text-[#fdf0d5] font-bold py-3 px-4 rounded-md shadow-lg border border-[#c1121f] transition-all uppercase tracking-widest text-sm">
+                    <!-- Submit -->
+                    <div style="padding-top:8px;animation: fadeUp 0.4s var(--ease-out) 260ms both;">
+                        <button type="submit" class="btn btn-gold" style="width:100%;padding:13px 24px;font-size:15px;">
                             Vytvořit účet
                         </button>
-                        <p class="text-center text-slate-500 text-sm mt-4">
-                               Už máte účet? <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/AuthController.php?action=login" class="text-blue-400 hover:text-white transition-colors">Přihlaste se zde</a>.
-                        </p>
                     </div>
+
                 </div>
             </form>
+
+            <div class="auth-divider"></div>
+
+            <p style="text-align:center;font-size:13px;color:var(--t3);">
+                Už máte účet?
+                <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/AuthController.php?action=login"
+                   style="color:var(--accent);font-weight:600;transition:color 150ms ease;"
+                   onmouseover="this.style.color='var(--accent-h)'"
+                   onmouseout="this.style.color='var(--accent)'">
+                    Přihlaste se &rarr;
+                </a>
+            </p>
         </div>
+
     </div>
-</main>
+</div>
 
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

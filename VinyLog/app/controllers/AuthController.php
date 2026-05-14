@@ -89,6 +89,7 @@ class AuthController {
 
                 // ÚSPĚCH: Uložíme si důležitá data do Session
                 $_SESSION['user_id'] = $user['id'];
+                $_SESSION['is_admin'] = (int)($user['is_admin'] ?? 0);
 
                 // Uložíme si jméno pro uvítání (přezdívku, nebo uživatelské jméno)
                 $_SESSION['user_name'] = !empty($user['nickname']) ? $user['nickname'] : $user['username'];
@@ -111,6 +112,7 @@ class AuthController {
         // Vymažeme specifická uživatelská data ze Session
         unset($_SESSION['user_id']);
         unset($_SESSION['user_name']);
+        unset($_SESSION['is_admin']);
 
         $this->addSuccessMessage('Byli jste úspěšně odhlášeni.');
         header('Location: VinylController.php?action=index');

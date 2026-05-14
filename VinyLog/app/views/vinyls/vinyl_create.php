@@ -1,89 +1,155 @@
 <?php require_once __DIR__ . '/../layout/header.php'; ?>
 
-<main class="container mx-auto px-6 pb-10 pt-6 flex-grow">
-    <div class="max-w-2xl mx-auto">
-        <div class="bg-[#D6CCC2] border border-[#E3D5CA] rounded-xl shadow-sm p-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-[#1a1c1e] mb-2">Přidat vinyl</h2>
-                <p class="text-[#1a1c1e]">Vyplňte formulář pro přidání nového vinylu do databáze.</p>
-            </div>
+<div class="page-content" style="max-width:680px;margin:0 auto;">
 
-            <form action="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php" method="post" enctype="multipart/form-data" class="space-y-6">
-                <div class="grid gap-6">
+    <div style="margin-bottom:24px;">
+        <a class="back-link" href="?action=index">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Zpět na seznam
+        </a>
+    </div>
+
+    <div class="form-card">
+        <div style="margin-bottom:32px;">
+            <h2 style="font-size:1.6rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em;margin-bottom:6px;">Přidat vinyl</h2>
+            <p style="font-size:14px;color:var(--t2);">Vyplňte formulář pro přidání nového vinylu do sbírky.</p>
+        </div>
+
+        <form action="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php"
+              method="post" enctype="multipart/form-data">
+
+            <div style="display:flex;flex-direction:column;gap:22px;">
+
+                <!-- Album name -->
+                <div style="animation: fadeUp 0.4s var(--ease-out) 60ms both;">
+                    <label for="album_name" class="form-label">
+                        Název alba <span style="color:var(--red);">*</span>
+                    </label>
+                    <input type="text" id="album_name" name="album_name" required
+                           class="input-field" placeholder="např. Dark Side of the Moon">
+                </div>
+
+                <!-- Artist -->
+                <div style="animation: fadeUp 0.4s var(--ease-out) 100ms both;">
+                    <label for="artist" class="form-label">
+                        Umělec <span style="color:var(--red);">*</span>
+                    </label>
+                    <input type="text" id="artist" name="artist" required
+                           class="input-field" placeholder="např. Pink Floyd">
+                </div>
+
+                <!-- Category + Subcategory -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;animation: fadeUp 0.4s var(--ease-out) 140ms both;">
                     <div>
-                        <label for="album_name" class="block text-sm font-medium text-[#1a1c1e] mb-2">Název alba <span class="text-[#D5BDAF]">*</span></label>
-                        <input type="text" id="album_name" name="album_name" required 
-                               class="w-full p-3 rounded-lg border border-[#E3D5CA] bg-[#F5EBE0] focus:border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20 transition-all duration-200">
+                        <label for="category" class="form-label">
+                            Kategorie <span style="color:var(--red);">*</span>
+                        </label>
+                        <select id="category" name="category" required class="input-field">
+                            <option value="">-- Vyberte --</option>
+                            <?php if (!empty($categories)): ?>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
                     </div>
-
                     <div>
-                        <label for="artist" class="block text-sm font-medium text-[#1a1c1e] mb-2">Umělec <span class="text-[#D5BDAF]">*</span></label>
-                        <input type="text" id="artist" name="artist" required 
-                               class="w-full p-3 rounded-lg border border-[#E3D5CA] bg-[#F5EBE0] focus:border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20 transition-all duration-200">
-                    </div>
-
-                    <div class="grid md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="release_year" class="block text-sm font-medium text-[#1a1c1e] mb-2">Rok vydání</label>
-                            <input type="number" id="release_year" name="release_year" min="1900" max="2100" 
-                                   class="w-full p-3 rounded-lg border border-[#E3D5CA] bg-[#F5EBE0] focus:border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20 transition-all duration-200">
-                        </div>
-                        <div>
-                            <label for="genre" class="block text-sm font-medium text-[#1a1c1e] mb-2">Žánr</label>
-                            <input type="text" id="genre" name="genre" 
-                                   class="w-full p-3 rounded-lg border border-[#E3D5CA] bg-[#F5EBE0] focus:border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20 transition-all duration-200">
-                        </div>
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-[#1a1c1e] mb-2">Cena (Kč)</label>
-                            <input type="number" id="price" name="price" step="0.01" min="0" 
-                                   class="w-full p-3 rounded-lg border border-[#E3D5CA] bg-[#F5EBE0] focus:border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20 transition-all duration-200">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-[#1a1c1e] mb-3">Obrázky alba</label>
-                        <div class="w-full">
-                            <label for="album_cover" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E3D5CA] rounded-lg cursor-pointer bg-[#F5EBE0] hover:bg-[#EDEDE9] hover:border-[#D5BDAF] transition-all duration-200">
-                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <span id="file-title" class="text-sm text-[#1a1c1e] font-medium">Klikněte pro výběr souborů</span>
-                                    <span id="file-info" class="text-xs text-[#1a1c1e] mt-2 text-center px-4">Žádné soubory nebyly vybrány</span>
-                                </div>
-                                <input type="file" id="album_cover" name="album_cover[]" multiple accept="image/*" class="hidden">
-                            </label>
-                        </div>
+                        <label for="subcategory" class="form-label">Podkategorie</label>
+                        <select id="subcategory" name="subcategory" class="input-field">
+                            <option value="">-- Nejprve vyberte kategorii --</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="pt-4">
-                    <button type="submit" class="w-full bg-[#D5BDAF] hover:bg-[#F5EBE0] text-[#1a1c1e] font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm border border-[#D5BDAF] focus:ring-2 focus:ring-[#D5BDAF]/20">
+                <!-- Year / Genre / Price -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;animation: fadeUp 0.4s var(--ease-out) 180ms both;">
+                    <div>
+                        <label for="release_year" class="form-label">Rok vydání</label>
+                        <input type="number" id="release_year" name="release_year"
+                               min="1900" max="2100" class="input-field" placeholder="2024">
+                    </div>
+                    <div>
+                        <label for="genre" class="form-label">Žánr</label>
+                        <input type="text" id="genre" name="genre"
+                               class="input-field" placeholder="Rock">
+                    </div>
+                    <div>
+                        <label for="price" class="form-label">Cena (Kč)</label>
+                        <input type="number" id="price" name="price"
+                               step="0.01" min="0" class="input-field" placeholder="499">
+                    </div>
+                </div>
+
+                <!-- File upload -->
+                <div style="animation: fadeUp 0.4s var(--ease-out) 220ms both;">
+                    <label class="form-label">Obrázky alba</label>
+                    <label for="album_cover" class="upload-zone" id="upload-label">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="color:var(--t3);margin-bottom:4px;">
+                            <path d="M14 18V8M10 12l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 20a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                        <span id="file-title" style="font-size:14px;font-weight:600;color:var(--t2);">Klikněte pro výběr souborů</span>
+                        <span id="file-info" style="font-size:12px;color:var(--t3);text-align:center;">JPG, PNG, WEBP &mdash; více souborů najednou</span>
+                        <input type="file" id="album_cover" name="album_cover[]" multiple accept="image/*" class="hidden" style="display:none;">
+                    </label>
+                </div>
+
+                <!-- Submit -->
+                <div style="padding-top:8px;animation: fadeUp 0.4s var(--ease-out) 260ms both;">
+                    <button type="submit" class="btn btn-gold" style="width:100%;padding:13px 24px;font-size:15px;">
                         Přidat vinyl
                     </button>
                 </div>
-            </form>
-        </div>
+
+            </div>
+        </form>
     </div>
-</main>
+</div>
 
 <script>
-    const fileInput = document.getElementById('album_cover');
-    const fileTitle = document.getElementById('file-title');
-    const fileInfo = document.getElementById('file-info');
+    const allSubcategories = <?= json_encode($subcategories ?? []) ?>;
 
-    fileInput.addEventListener('change', function(event) {
-        const files = event.target.files;
+    document.getElementById('category').addEventListener('change', function () {
+        const categoryId = parseInt(this.value);
+        const subSelect  = document.getElementById('subcategory');
+        const filtered   = allSubcategories.filter(s => s.category_id == categoryId);
 
+        subSelect.innerHTML = '';
+        const def = document.createElement('option');
+        def.value = '';
+        def.textContent = filtered.length ? '-- Vyberte podkategorii --' : '-- Žádné podkategorie --';
+        subSelect.appendChild(def);
+
+        filtered.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub.id;
+            opt.textContent = sub.name;
+            subSelect.appendChild(opt);
+        });
+    });
+
+    const fileInput  = document.getElementById('album_cover');
+    const fileTitle  = document.getElementById('file-title');
+    const fileInfo   = document.getElementById('file-info');
+    const uploadLabel = document.getElementById('upload-label');
+
+    fileInput.addEventListener('change', function (e) {
+        const files = e.target.files;
         if (!files || files.length === 0) {
             fileTitle.textContent = 'Klikněte pro výběr souborů';
-            fileTitle.className = 'text-sm text-[#1a1c1e] font-medium';
-            fileInfo.textContent = 'Žádné soubory nebyly vybrány';
+            fileTitle.style.color = 'var(--t2)';
+            fileInfo.textContent  = 'JPG, PNG, WEBP — více souborů najednou';
+            uploadLabel.classList.remove('active');
         } else if (files.length === 1) {
-            fileTitle.textContent = 'Soubor připraven';
-            fileTitle.className = 'text-sm text-[#1a1c1e] font-medium';
-            fileInfo.textContent = files[0].name;
+            fileTitle.textContent = '✓ ' + files[0].name;
+            fileTitle.style.color = 'var(--t1)';
+            fileInfo.textContent  = 'Soubor připraven k nahrání';
+            uploadLabel.classList.add('active');
         } else {
-            fileTitle.textContent = 'Soubory připraveny';
-            fileTitle.className = 'text-sm text-[#1a1c1e] font-medium';
-            fileInfo.textContent = 'Vybráno celkem: ' + files.length + ' souborů';
+            fileTitle.textContent = '✓ ' + files.length + ' souborů vybráno';
+            fileTitle.style.color = 'var(--t1)';
+            fileInfo.textContent  = 'Soubory připraveny k nahrání';
+            uploadLabel.classList.add('active');
         }
     });
 </script>

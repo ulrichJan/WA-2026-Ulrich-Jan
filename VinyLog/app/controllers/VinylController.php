@@ -22,6 +22,8 @@ class VinylController {
                 'genre' => $_POST['genre'] ?? '',
                 'price' => $_POST['price'] ?? '',
                 'album_cover' => $this->processImageUploads(),
+                'category' => (int)($_POST['category'] ?? 0),
+                'subcategory' => (int)($_POST['subcategory'] ?? 0),
             ];
 
             $dto = new VinylDTO($data);
@@ -48,7 +50,7 @@ class VinylController {
     public function index() {
         $vinyl = new Vinyl();
         $vinyls = $vinyl->getAll();
-        include '../views/vinyls/vinyl_index.php';
+        include __DIR__ . '/../views/vinyls/vinyl_index.php';
     }
 
     //  Show create form
@@ -60,7 +62,15 @@ class VinylController {
             header('Location: AuthController.php?action=login');
             exit;
         }
-        include '../views/vinyls/vinyl_create.php';
+        // Load categories and subcategories for select lists
+        require_once __DIR__ . '/../models/Category.php';
+        require_once __DIR__ . '/../models/Subcategory.php';
+        $categoryModel = new Category();
+        $categories = $categoryModel->getAllCategories();
+        $subcategoryModel = new Subcategory();
+        $subcategories = $subcategoryModel->getAllSubcategories();
+
+        include __DIR__ . '/../views/vinyls/vinyl_create.php';
     }
 
     public function edit($id = null) {
@@ -90,16 +100,25 @@ class VinylController {
             exit;
         }
 
-        // Kontrola vlastnictví
+        // Kontrola vlastnictví (admin může upravovat vše)
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$vinylData['created_by'] !== (int)$currentUserId) {
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
             exit;
         }
 
         $vinyl = $vinylData;
-        include '../views/vinyls/vinyl_edit.php';
+        // Load categories and subcategories for edit form
+        require_once __DIR__ . '/../models/Category.php';
+        require_once __DIR__ . '/../models/Subcategory.php';
+        $categoryModel = new Category();
+        $categories = $categoryModel->getAllCategories();
+        $subcategoryModel = new Subcategory();
+        $subcategories = $subcategoryModel->getAllSubcategories();
+
+        include __DIR__ . '/../views/vinyls/vinyl_edit.php';
     }
 
     public function update($id = null) {
@@ -132,6 +151,8 @@ class VinylController {
             'release_year' => $_POST['release_year'] ?? '',
             'genre' => $_POST['genre'] ?? '',
             'price' => $_POST['price'] ?? '',
+            'category' => (int)($_POST['category'] ?? 0),
+            'subcategory' => (int)($_POST['subcategory'] ?? 0),
         ];
 
         $dto = new VinylDTO($data);
@@ -139,9 +160,10 @@ class VinylController {
         $vinyl = new Vinyl();
         $existingVinyl = $vinyl->getById($id);
 
-        // Kontrola vlastnictví před provedením aktualizace
+        // Kontrola vlastnictví před provedením aktualizace (admin může upravovat vše)
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$existingVinyl['created_by'] !== (int)$currentUserId) {
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        if ($currentUserId === null || ((int)$existingVinyl['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
             exit;
@@ -197,7 +219,7 @@ class VinylController {
         }
 
         $vinyl = $vinylData;
-        include '../views/vinyls/vinyl_show.php';
+        include __DIR__ . '/../views/vinyls/vinyl_show.php';
     }
 
     public function delete($id = null) {
@@ -220,9 +242,10 @@ class VinylController {
         $vinyl = new Vinyl();
         $vinylData = $vinyl->getById($id);
 
-        // 🛡️ Kontrola vlastnictví před smazáním
+        // Kontrola vlastnictví před smazáním (admin může mazat vše)
         $currentUserId = $_SESSION['user_id'] ?? null;
-        if ($currentUserId === null || (int)$vinylData['created_by'] !== (int)$currentUserId) {
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění smazat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
             exit;

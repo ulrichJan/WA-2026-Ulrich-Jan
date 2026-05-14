@@ -7,6 +7,8 @@ class VinylDTO {
     public $genre;
     public $price;
     public $album_cover;
+    public $category;
+    public $subcategory;
 
     public function __construct($data = []) {
         $this->album_name = $data['album_name'] ?? '';
@@ -15,5 +17,7 @@ class VinylDTO {
         $this->genre = $data['genre'] ?? '';
         $this->price = $data['price'] ?? '';
         $this->album_cover = $data['album_cover'] ?? [];
+        $this->category = $data['category'] ?? null;
+        $this->subcategory = $data['subcategory'] ?? null;
     }
 }
