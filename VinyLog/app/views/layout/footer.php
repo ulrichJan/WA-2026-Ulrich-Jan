@@ -1,15 +1,14 @@
-    </main><!-- konec <main> bloku otevřeného v header.php -->
+</main><!-- konec <main> bloku otevřeného v header.php -->
 
-    <!-- =====================================================================
-         Patička stránky
-         mt-auto v kombinaci s flex flex-col na <body> zajistí, že patička
-         bude vždy na spodku stránky i pokud je obsah kratší než výška okna.
-         ===================================================================== -->
-    <footer class="mt-auto py-8 text-center" style="border-top:1px solid #1a1a1a;">
-        <p style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#383838;">
-            &copy; WA 2026 &mdash; VinyLog
-        </p>
-    </footer>
+<!-- =====================================================================
+     Patička stránky
+     margin-top: auto tlačí patičku na spodek stránky (body je flex-column)
+     ===================================================================== -->
+<footer style="margin-top:auto;padding:1.75rem 2rem;text-align:center;border-top:1px solid var(--border);">
+    <p style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);">
+        &copy; WA 2026 &mdash; VinyLog
+    </p>
+</footer>
 
 </body>
 </html>
