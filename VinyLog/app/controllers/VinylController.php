@@ -1,28 +1,63 @@
 <?php
+
+// Session musí být spuštěna jako první – před jakýmkoliv výstupem i před include
 session_start();
 
 require_once '../models/Vinyl.php';
 require_once '../dto/VinylDTO.php';
 
+/**
+ * Třída VinylController – hlavní controller aplikace
+ *
+ * Zodpovídá za veškerou logiku spojenou s vinylovými deskami:
+ * zobrazení seznamu, detail, přidání, úprava a mazání.
+ *
+ * Architektonický vzor MVC (Model-View-Controller):
+ *  - Model  = Vinyl.php, Category.php, Subcategory.php (práce s DB)
+ *  - View   = soubory v /views/vinyls/ (HTML šablony)
+ *  - Controller = tento soubor (logika a přesměrování)
+ *
+ * Autorizační pravidla:
+ *  - Čtení (index, show) je povoleno všem (i nepřihlášeným)
+ *  - Zápis (create, store) vyžaduje přihlášení
+ *  - Úprava a mazání (edit, update, delete) vyžaduje přihlášení + vlastnictví záznamu
+ *  - Administrátor (is_admin=1) může upravovat a mazat záznamy všech uživatelů
+ */
 class VinylController {
 
+    // =========================================================================
+    // STORE – uložení nového vinylu (zpracování POST formuláře)
+    // =========================================================================
+
+    /**
+     * Zpracuje odeslaný formulář pro přidání nového vinylu.
+     *
+     * Sestaví VinylDTO z POST dat, zpracuje nahrané obrázky a předá vše modelu.
+     */
     public function store() {
-        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        // --- Autorizace: přihlášení je povinné pro zápis ---
         if (!isset($_SESSION['user_id'])) {
             $this->addErrorMessage('Pro přidání vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Build DTO from POST
+
+            // Zpracování nahraných obrázků provedeme jednou, výsledek předáme do DTO
+            // (processImageUploads přesune soubory do public/uploads/ a vrátí pole názvů)
+            $uploadedImages = $this->processImageUploads();
+
+            // Sestavení DTO z POST dat – (int) přetypování category/subcategory
+            // zajistí, že do DB se uloží číslo, ne řetězec "0" nebo prázdný string
             $data = [
-                'album_name' => $_POST['album_name'] ?? '',
-                'artist' => $_POST['artist'] ?? '',
-                'release_year' => $_POST['release_year'] ?? '',
-                'genre' => $_POST['genre'] ?? '',
-                'price' => $_POST['price'] ?? '',
-                'album_cover' => $this->processImageUploads(),
-                'category' => (int)($_POST['category'] ?? 0),
+                'album_name'  => $_POST['album_name']  ?? '',
+                'artist'      => $_POST['artist']      ?? '',
+                'release_year'=> $_POST['release_year']?? '',
+                'genre'       => $_POST['genre']       ?? '',
+                'price'       => $_POST['price']       ?? '',
+                'album_cover' => $uploadedImages,
+                'category'    => (int)($_POST['category']    ?? 0),
                 'subcategory' => (int)($_POST['subcategory'] ?? 0),
             ];
 
@@ -30,11 +65,7 @@ class VinylController {
 
             $vinylModel = new Vinyl();
 
-            // Handle image uploads and attach to DTO (processed by controller helper)
-            $uploaded = $this->processImageUploads();
-            $dto->images = $uploaded;
-
-            // Pass current user id to model so we store `created_by`
+            // ID přihlášeného uživatele → uloží se do sloupce created_by
             $userId = $_SESSION['user_id'] ?? null;
 
             if ($vinylModel->createFromDTO($dto, $userId)) {
@@ -47,87 +78,141 @@ class VinylController {
         }
     }
 
+    // =========================================================================
+    // INDEX – seznam všech vinylů
+    // =========================================================================
+
+    /**
+     * Načte všechny vinyly z DB a předá je do view pro zobrazení.
+     * Přístupné všem (i nepřihlášeným návštěvníkům).
+     */
     public function index() {
-        $vinyl = new Vinyl();
+        $vinyl  = new Vinyl();
+        // getAll() vrací pole asociativních polí – každé = jeden vinyl
+        // JOIN v getAll() přidá i category_name a subcategory_name
         $vinyls = $vinyl->getAll();
         include __DIR__ . '/../views/vinyls/vinyl_index.php';
     }
 
-    //  Show create form
+    // =========================================================================
+    // CREATE – zobrazení formuláře pro přidání nového vinylu
+    // =========================================================================
+
+    /**
+     * Zobrazí formulář pro přidání nového vinylu.
+     * Načte dostupné kategorie a podkategorie pro select-boxy ve formuláři.
+     */
     public function create() {
-        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        // --- Autorizace ---
         if (!isset($_SESSION['user_id'])) {
             $this->addErrorMessage('Pro přidání vinylu se musíte nejprve přihlásit.');
-
             header('Location: AuthController.php?action=login');
             exit;
         }
-        // Load categories and subcategories for select lists
+
+        // Načtení kategorií a podkategorií pro select-boxy ve formuláři
+        // require_once zajistí, že třídy se nenačtou vícekrát pokud jsou již includovány
         require_once __DIR__ . '/../models/Category.php';
         require_once __DIR__ . '/../models/Subcategory.php';
-        $categoryModel = new Category();
-        $categories = $categoryModel->getAllCategories();
-        $subcategoryModel = new Subcategory();
-        $subcategories = $subcategoryModel->getAllSubcategories();
 
+        $categoryModel    = new Category();
+        $categories       = $categoryModel->getAllCategories();
+
+        $subcategoryModel = new Subcategory();
+        $subcategories    = $subcategoryModel->getAllSubcategories();
+
+        // Proměnné $categories a $subcategories jsou dostupné i v includeovaném view
         include __DIR__ . '/../views/vinyls/vinyl_create.php';
     }
 
+    // =========================================================================
+    // EDIT – zobrazení formuláře pro úpravu existujícího vinylu
+    // =========================================================================
+
+    /**
+     * Zobrazí předvyplněný formulář pro editaci existujícího vinylu.
+     *
+     * Ověří: přihlášení → existence záznamu → vlastnictví (nebo admin práva)
+     *
+     * @param int|null $id ID vinylu (může přijít z URL nebo z parametru metody)
+     */
     public function edit($id = null) {
+        // ID může přijít jako parametr metody (z routeru), nebo z URL ?id=X
         if ($id === null) {
             $id = $_GET['id'] ?? null;
         }
 
-        // Kontrola přihlášení
+        // --- Autorizace: přihlášení ---
         if (!isset($_SESSION['user_id'])) {
             $this->addErrorMessage('Pro úpravu vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
 
+        // --- Validace: ID musí být zadáno ---
         if (!$id) {
             $this->addErrorMessage('Nebylo zadáno ID vinylu k úpravě.');
             header("Location: VinylController.php?action=index");
             exit;
         }
 
-        $vinyl = new Vinyl();
+        $vinyl     = new Vinyl();
         $vinylData = $vinyl->getById($id);
 
+        // --- Validace: vinyl musí existovat ---
         if (!$vinylData) {
             $this->addErrorMessage('Požadovaný vinyl nebyl v databázi nalezen.');
             header("Location: VinylController.php?action=index");
             exit;
         }
 
-        // Kontrola vlastnictví (admin může upravovat vše)
+        // --- Autorizace: vlastnictví nebo admin práva ---
+        // Admin (is_admin=1) může editovat záznamy ostatních uživatelů
         $currentUserId = $_SESSION['user_id'] ?? null;
-        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+
         if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
             exit;
         }
 
+        // $vinyl přepíšeme z objektu Vinyl na asociativní pole dat (pro view)
         $vinyl = $vinylData;
-        // Load categories and subcategories for edit form
+
+        // Načtení kategorií a podkategorií pro předvyplněné select-boxy
         require_once __DIR__ . '/../models/Category.php';
         require_once __DIR__ . '/../models/Subcategory.php';
-        $categoryModel = new Category();
-        $categories = $categoryModel->getAllCategories();
+
+        $categoryModel    = new Category();
+        $categories       = $categoryModel->getAllCategories();
+
         $subcategoryModel = new Subcategory();
-        $subcategories = $subcategoryModel->getAllSubcategories();
+        $subcategories    = $subcategoryModel->getAllSubcategories();
 
         include __DIR__ . '/../views/vinyls/vinyl_edit.php';
     }
 
+    // =========================================================================
+    // UPDATE – uložení editace existujícího vinylu
+    // =========================================================================
+
+    /**
+     * Zpracuje POST formulář s úpravami existujícího vinylu.
+     *
+     * Ověří přihlášení, vlastnictví záznamu, zpracuje obrázky a uloží data.
+     * Pokud nejsou nahrány nové obrázky, zachová stávající.
+     *
+     * @param int|null $id ID vinylu k aktualizaci
+     */
     public function update($id = null) {
-        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        // --- Autorizace: přihlášení ---
         if (!isset($_SESSION['user_id'])) {
             $this->addErrorMessage('Pro úpravu vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
+
         if ($id === null) {
             $id = $_GET['id'] ?? null;
         }
@@ -138,44 +223,50 @@ class VinylController {
             exit;
         }
 
+        // Aktualizaci provedeme pouze pro POST požadavky (formulář odeslán)
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->addNoticeMessage('Pro úpravu vinylu je nutné odeslat formulář.');
             header("Location: VinylController.php?action=index");
             exit;
         }
 
-        // Build DTO from POST
+        // Sestavení DTO z POST dat
         $data = [
-            'album_name' => $_POST['album_name'] ?? '',
-            'artist' => $_POST['artist'] ?? '',
-            'release_year' => $_POST['release_year'] ?? '',
-            'genre' => $_POST['genre'] ?? '',
-            'price' => $_POST['price'] ?? '',
-            'category' => (int)($_POST['category'] ?? 0),
-            'subcategory' => (int)($_POST['subcategory'] ?? 0),
+            'album_name'   => $_POST['album_name']   ?? '',
+            'artist'       => $_POST['artist']        ?? '',
+            'release_year' => $_POST['release_year']  ?? '',
+            'genre'        => $_POST['genre']          ?? '',
+            'price'        => $_POST['price']          ?? '',
+            'category'     => (int)($_POST['category']    ?? 0),
+            'subcategory'  => (int)($_POST['subcategory'] ?? 0),
         ];
 
-        $dto = new VinylDTO($data);
-
+        $dto   = new VinylDTO($data);
         $vinyl = new Vinyl();
+
+        // Načteme stávající záznam pro ověření vlastnictví a záchranné obrázky
         $existingVinyl = $vinyl->getById($id);
 
-        // Kontrola vlastnictví před provedením aktualizace (admin může upravovat vše)
+        // --- Autorizace: vlastnictví nebo admin ---
         $currentUserId = $_SESSION['user_id'] ?? null;
-        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+
         if ($currentUserId === null || ((int)$existingVinyl['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
             exit;
         }
+
+        // --- Zpracování obrázků ---
         $uploadedImages = [];
 
-        // If files were submitted, try to process them
-        if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+        // Pokud uživatel nahrál nové soubory, zpracujeme je
+        if (isset($_FILES['album_cover']) && !empty($_FILES['album_cover']['name'][0])) {
             $uploadedImages = $this->processImageUploads();
         }
 
-        // Rescue: if no new images were uploaded (or processing yielded none), keep existing images
+        // Záchrana: pokud nebyl nahrán žádný nový obrázek, ponecháme stávající.
+        // JSON decode převede uložený řetězec zpět na PHP pole názvů souborů.
         if (empty($uploadedImages) && $existingVinyl && !empty($existingVinyl['album_cover'])) {
             $uploadedImages = json_decode($existingVinyl['album_cover'], true);
             if (!is_array($uploadedImages)) {
@@ -193,11 +284,22 @@ class VinylController {
             exit;
         }
 
-            $this->addErrorMessage('Nastala chyba. Změny se nepodařilo uložit.');
-            header("Location: VinylController.php?action=index");
+        $this->addErrorMessage('Nastala chyba. Změny se nepodařilo uložit.');
+        header("Location: VinylController.php?action=index");
         exit;
     }
 
+    // =========================================================================
+    // SHOW – detail jednoho vinylu
+    // =========================================================================
+
+    /**
+     * Zobrazí detailní stránku jednoho vinylu.
+     * Přístupné všem (i nepřihlášeným). Tlačítka Upravit/Smazat
+     * se zobrazí pouze vlastníkovi nebo adminu.
+     *
+     * @param int|null $id ID vinylu k zobrazení
+     */
     public function show($id = null) {
         if ($id === null) {
             $id = $_GET['id'] ?? null;
@@ -209,7 +311,7 @@ class VinylController {
             exit;
         }
 
-        $vinyl = new Vinyl();
+        $vinyl     = new Vinyl();
         $vinylData = $vinyl->getById($id);
 
         if (!$vinylData) {
@@ -218,17 +320,29 @@ class VinylController {
             exit;
         }
 
+        // Přepíšeme proměnnou $vinyl z objektu na asociativní pole pro view
         $vinyl = $vinylData;
         include __DIR__ . '/../views/vinyls/vinyl_show.php';
     }
 
+    // =========================================================================
+    // DELETE – smazání vinylu
+    // =========================================================================
+
+    /**
+     * Trvale smaže vinyl z databáze.
+     * Ověří přihlášení a vlastnictví záznamu (nebo admin práva).
+     *
+     * @param int|null $id ID vinylu ke smazání
+     */
     public function delete($id = null) {
-        // !!! ZMĚNA: Autorizace: Pokud uživatel není přihlášen, nemá tu co dělat
+        // --- Autorizace: přihlášení ---
         if (!isset($_SESSION['user_id'])) {
             $this->addErrorMessage('Pro smazání vinylu se musíte nejprve přihlásit.');
             header('Location: AuthController.php?action=login');
             exit;
         }
+
         if ($id === null) {
             $id = $_GET['id'] ?? null;
         }
@@ -239,12 +353,13 @@ class VinylController {
             exit;
         }
 
-        $vinyl = new Vinyl();
+        $vinyl     = new Vinyl();
         $vinylData = $vinyl->getById($id);
 
-        // Kontrola vlastnictví před smazáním (admin může mazat vše)
+        // --- Autorizace: vlastnictví nebo admin ---
         $currentUserId = $_SESSION['user_id'] ?? null;
-        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+
         if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
             $this->addErrorMessage('Nemáte oprávnění smazat tento vinyl, protože nejste jeho autorem.');
             header("Location: VinylController.php?action=index");
@@ -258,11 +373,17 @@ class VinylController {
         } else {
             $this->addErrorMessage('Nastala chyba. Vinyl se nepodařilo smazat.');
         }
+
         header("Location: VinylController.php?action=index");
         exit;
     }
 
-    // --- Pomocné metody pro systém notifikací ---
+    // =========================================================================
+    // Pomocné metody – flash zprávy (notifikace v session)
+    // =========================================================================
+    // Zprávy se ukládají do session jako pole a zobrazí se v header.php
+    // při příštím načtení stránky (pak jsou vymazány).
+
     protected function addSuccessMessage($message) {
         $_SESSION['messages']['success'][] = $message;
     }
@@ -275,39 +396,59 @@ class VinylController {
         $_SESSION['messages']['error'][] = $message;
     }
 
-    // --- Pomocná metoda pro zpracování nahrávání obrázků ---
+    // =========================================================================
+    // Pomocná metoda – zpracování nahrání obrázků
+    // =========================================================================
+
+    /**
+     * Přesune nahrané soubory z dočasné složky PHP do public/uploads/.
+     *
+     * Bezpečnostní opatření:
+     *  - Whitelist přípon (jpg, jpeg, png, webp, gif)
+     *  - Náhodný název souboru (vinyl_ + uniqid + 4 hex znaky) → zabraňuje přepsání
+     *
+     * @return array Pole názvů souborů (bez cesty), které byly úspěšně nahrány
+     */
     protected function processImageUploads() {
         $uploadedFiles = [];
 
-        // Cesta ke složce, kam se budou obrázky fyzicky ukládat (relativně od tohoto kontroleru)
+        // Absolutní cesta k cílové složce (od tohoto souboru: ../../public/uploads/)
         $uploadDir = __DIR__ . '/../../public/uploads/';
 
-        // Zkontrolujeme, zda vůbec existuje adresář, pokud ne, vytvoříme ho
+        // Pokud složka neexistuje, vytvoříme ji (rekurzivně) s právy 0777
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        // Zkontrolujeme, zda byl odeslán alespoň jeden soubor
+        // $_FILES['album_cover'] je pole struktur (name, tmp_name, error, size)
+        // pro každý nahraný soubor (formulář má atribut multiple)
         if (isset($_FILES['album_cover']) && !empty($_FILES['album_cover']['name'][0])) {
             $fileCount = count($_FILES['album_cover']['name']);
 
             for ($i = 0; $i < $fileCount; $i++) {
-                if ($_FILES['album_cover']['error'][$i] === UPLOAD_ERR_OK) {
-                    $tmpName = $_FILES['album_cover']['tmp_name'][$i];
-                    $originalName = basename($_FILES['album_cover']['name'][$i]);
-                    $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                // Přeskočíme soubory s chybou (nebyly nahrány)
+                if ($_FILES['album_cover']['error'][$i] !== UPLOAD_ERR_OK) {
+                    continue;
+                }
 
-                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-                    if (!in_array($fileExtension, $allowedExtensions)) {
-                        continue;
-                    }
+                $tmpName       = $_FILES['album_cover']['tmp_name'][$i];
+                $originalName  = basename($_FILES['album_cover']['name'][$i]);
+                $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-                    $newName = 'vinyl_' . uniqid() . '_' . substr(md5(mt_rand()), 0, 4) . '.' . $fileExtension;
-                    $targetFilePath = $uploadDir . $newName;
+                // Whitelist povolených přípon – zamezujeme nahrání PHP/JS souborů
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                if (!in_array($fileExtension, $allowedExtensions)) {
+                    continue; // Přeskočíme soubory s nepovolenou příponou
+                }
 
-                    if (move_uploaded_file($tmpName, $targetFilePath)) {
-                        $uploadedFiles[] = $newName; // store only filename
-                    }
+                // Unikátní název: vinyl_ + uniqid() + 4 náhodné hex znaky + přípona
+                // Tím předejdeme kolizím při nahrání dvou souborů se stejným jménem
+                $newName        = 'vinyl_' . uniqid() . '_' . substr(md5(mt_rand()), 0, 4) . '.' . $fileExtension;
+                $targetFilePath = $uploadDir . $newName;
+
+                // move_uploaded_file() bezpečně přesune soubor z dočasné složky PHP
+                if (move_uploaded_file($tmpName, $targetFilePath)) {
+                    $uploadedFiles[] = $newName; // Ukládáme pouze název, ne celou cestu
                 }
             }
         }
@@ -316,26 +457,42 @@ class VinylController {
     }
 }
 
-// Instantiate and route the request
+// =============================================================================
+// Routing – přepínač akcí podle URL parametru ?action= a HTTP metody
+// =============================================================================
+// Tento kód se spustí při každém požadavku na VinylController.php.
+// Vytvoří instanci controlleru a zavolá příslušnou metodu.
+
 $controller = new VinylController();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // POST požadavky: ukládání (store) nebo aktualizace (update)
     if (isset($_GET['action']) && $_GET['action'] === 'update') {
         $controller->update($_GET['id'] ?? null);
     } else {
         $controller->store();
     }
-} elseif (isset($_GET['action']) && $_GET['action'] === 'show') {
-    $controller->show($_GET['id'] ?? null);
-} elseif (isset($_GET['action']) && $_GET['action'] === 'delete') {
-    $controller->delete($_GET['id'] ?? null);
-} elseif (isset($_GET['action']) && $_GET['action'] === 'edit') {
-    $controller->edit($_GET['id'] ?? null);
-} elseif (isset($_GET['action']) && $_GET['action'] === 'index') {
-    $controller->index();
-} elseif (isset($_GET['action']) && $_GET['action'] === 'create') {
-    $controller->create();
+} elseif (isset($_GET['action'])) {
+    // GET požadavky: zobrazení různých stránek dle ?action=...
+    switch ($_GET['action']) {
+        case 'show':
+            $controller->show($_GET['id'] ?? null);
+            break;
+        case 'delete':
+            $controller->delete($_GET['id'] ?? null);
+            break;
+        case 'edit':
+            $controller->edit($_GET['id'] ?? null);
+            break;
+        case 'index':
+            $controller->index();
+            break;
+        case 'create':
+            $controller->create();
+            break;
+        default:
+            echo 'Neplatná akce.';
+    }
 } else {
-    echo 'Neplatný požadavek. Zadejte formulář pro přidání vinylu nebo přejděte na seznam vinylů.';
+    echo 'Neplatný požadavek. Přejděte na <a href="VinylController.php?action=index">seznam vinylů</a>.';
 }
-?>
