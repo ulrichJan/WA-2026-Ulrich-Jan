@@ -86,10 +86,9 @@ require_once __DIR__ . '/../layout/header.php';
                 $editUrl      = '/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=edit&id=' . urlencode($vinyl['id']);
                 $deleteUrl    = '/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=delete&id=' . urlencode($vinyl['id']);
 
-                // Zjistíme, zda přihlášený uživatel může záznam editovat/mazat
-                $isOwner = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($vinyl['created_by'] ?? 0);
+                // Pouze admin může editovat/mazat záznamy – řadoví uživatelé ne
                 $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
-                $canEdit = $isOwner || $isAdmin;
+                $canEdit = $isAdmin;
 
                 // Zpoždění animace: každá karta nastupuje s offsetem 60ms
                 $delay = min($i * 60, 600); // cap na 600ms
@@ -133,14 +132,13 @@ require_once __DIR__ . '/../layout/header.php';
                 <?php if ($canEdit): ?>
                     <!-- Akční tlačítka – zobrazí se vlastníkovi nebo adminovi -->
                     <div class="vinyl-card__actions">
-                        <a href="<?= $editUrl ?>"
-                           class="btn btn-sm <?= $isOwner ? 'btn-primary' : 'btn-admin-edit' ?>">
-                            Upravit<?= (!$isOwner && $isAdmin) ? ' (A)' : '' ?>
+                        <a href="<?= $editUrl ?>" class="btn btn-sm btn-admin-edit">
+                            Upravit
                         </a>
                         <a href="<?= $deleteUrl ?>"
                            onclick="return confirm('Opravdu chcete tento vinyl smazat?')"
-                           class="btn btn-sm <?= $isOwner ? 'btn-ghost' : 'btn-admin-delete' ?>">
-                            Smazat<?= (!$isOwner && $isAdmin) ? ' (A)' : '' ?>
+                           class="btn btn-sm btn-admin-delete">
+                            Smazat
                         </a>
                     </div>
                 <?php endif; ?>

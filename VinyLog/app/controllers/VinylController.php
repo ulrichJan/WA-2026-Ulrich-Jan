@@ -166,13 +166,11 @@ class VinylController {
             exit;
         }
 
-        // --- Autorizace: vlastnictví nebo admin práva ---
-        // Admin (is_admin=1) může editovat záznamy ostatních uživatelů
-        $currentUserId = $_SESSION['user_id'] ?? null;
-        $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        // --- Autorizace: pouze admin může editovat záznamy ---
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
 
-        if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
-            $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
+        if (!$isAdmin) {
+            $this->addErrorMessage('Úpravy vinylů jsou povoleny pouze administrátorům.');
             header("Location: VinylController.php?action=index");
             exit;
         }
@@ -247,12 +245,12 @@ class VinylController {
         // Načteme stávající záznam pro ověření vlastnictví a záchranné obrázky
         $existingVinyl = $vinyl->getById($id);
 
-        // --- Autorizace: vlastnictví nebo admin ---
+        // --- Autorizace: pouze admin může ukládat úpravy ---
         $currentUserId = $_SESSION['user_id'] ?? null;
         $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
 
-        if ($currentUserId === null || ((int)$existingVinyl['created_by'] !== (int)$currentUserId && !$isAdmin)) {
-            $this->addErrorMessage('Nemáte oprávnění upravovat tento vinyl, protože nejste jeho autorem.');
+        if (!$isAdmin) {
+            $this->addErrorMessage('Úpravy vinylů jsou povoleny pouze administrátorům.');
             header("Location: VinylController.php?action=index");
             exit;
         }
@@ -356,12 +354,11 @@ class VinylController {
         $vinyl     = new Vinyl();
         $vinylData = $vinyl->getById($id);
 
-        // --- Autorizace: vlastnictví nebo admin ---
-        $currentUserId = $_SESSION['user_id'] ?? null;
-        $isAdmin       = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        // --- Autorizace: pouze admin může mazat záznamy ---
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
 
-        if ($currentUserId === null || ((int)$vinylData['created_by'] !== (int)$currentUserId && !$isAdmin)) {
-            $this->addErrorMessage('Nemáte oprávnění smazat tento vinyl, protože nejste jeho autorem.');
+        if (!$isAdmin) {
+            $this->addErrorMessage('Mazání vinylů je povoleno pouze administrátorům.');
             header("Location: VinylController.php?action=index");
             exit;
         }

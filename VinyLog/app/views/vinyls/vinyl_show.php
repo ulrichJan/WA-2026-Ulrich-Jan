@@ -152,25 +152,23 @@ require_once __DIR__ . '/../layout/header.php';
             <!-- Akční tlačítka: zobrazí se vlastníkovi nebo adminovi.
                  Admin vidí záznamy ostatních uživatelů s odlišnými styly tlačítek. -->
             <?php
-                $isOwner = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($vinyl['created_by'] ?? 0);
+                // Pouze admin může editovat/mazat záznamy – řadoví uživatelé ne
                 $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
             ?>
-            <?php if ($isOwner || $isAdmin): ?>
+            <?php if ($isAdmin): ?>
                 <div class="actions-box" style="animation: fadeUp 280ms var(--ease-out) 200ms both;">
                     <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:0.875rem;">
                         Akce
                     </div>
                     <div style="display:flex;gap:0.75rem;">
-                        <!-- Tlačítko Upravit: zelené pro vlastníka, tlumená zelená pro admina editujícího cizí záznam -->
                         <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=edit&id=<?= htmlspecialchars($vinyl['id']) ?>"
-                           class="btn <?= $isOwner ? 'btn-primary' : 'btn-admin-edit' ?>">
-                            Upravit<?= (!$isOwner && $isAdmin) ? ' (admin)' : '' ?>
+                           class="btn btn-admin-edit">
+                            Upravit
                         </a>
-                        <!-- Tlačítko Smazat: ghost pro vlastníka, červené pro admina editujícího cizí záznam -->
                         <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=delete&id=<?= htmlspecialchars($vinyl['id']) ?>"
                            onclick="return confirm('Opravdu chcete tento vinyl smazat?')"
-                           class="btn <?= $isOwner ? 'btn-danger-outline' : 'btn-admin-delete' ?>">
-                            Smazat<?= (!$isOwner && $isAdmin) ? ' (admin)' : '' ?>
+                           class="btn btn-admin-delete">
+                            Smazat
                         </a>
                     </div>
                 </div>

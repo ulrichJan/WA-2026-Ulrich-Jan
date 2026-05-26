@@ -411,10 +411,10 @@ img { display: block; max-width: 100%; }
 }
 .vinyl-card__actions {
   display: flex;
-  gap: 0.375rem;
-  margin-top: 0.75rem;
-  padding-top: 0.625rem;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem 1rem;
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 /* ============================================================
