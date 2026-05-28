@@ -248,12 +248,33 @@ img { display: block; max-width: 100%; }
 .messages { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.75rem; }
 
 .alert {
-  padding: 0.8rem 1rem;
+  position: relative;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   border: 1px solid;
+  transition: opacity 280ms ease, transform 280ms ease,
+              max-height 280ms ease 100ms, padding 250ms ease 100ms,
+              margin 250ms ease 100ms, border-width 250ms ease 100ms;
 }
+
+.alert-close {
+  position: absolute;
+  top: 50%; right: 0.75rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+.alert-close:hover { opacity: 1; background: oklch(100% 0 0 / 8%); }
 .alert-success {
   background: oklch(42% 0.13 148 / 14%);
   border-color: oklch(62% 0.21 148 / 35%);
@@ -424,11 +445,11 @@ img { display: block; max-width: 100%; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: var(--shadow-sm);
 }
 
-.form-row { display: flex; flex-direction: column; gap: 1.125rem; }
+.form-row { display: flex; flex-direction: column; gap: 0.875rem; }
 
 .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
 
@@ -447,7 +468,7 @@ img { display: block; max-width: 100%; }
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.625rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   color: var(--t1);
   font-size: 0.9375rem;
   font-family: inherit;
@@ -456,6 +477,25 @@ img { display: block; max-width: 100%; }
   transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
   -webkit-appearance: none;
 }
+
+/* Password toggle wrapper */
+.pwd-wrap { position: relative; }
+.pwd-wrap .form-input,
+.pwd-wrap .input-field { padding-right: 2.75rem; }
+.pwd-toggle {
+  position: absolute;
+  top: 50%; right: 0.6rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--t3);
+  padding: 0.25rem;
+  line-height: 0;
+  border-radius: 4px;
+  transition: color 140ms ease, background 140ms ease;
+}
+.pwd-toggle:hover { color: var(--t1); background: oklch(100% 0 0 / 6%); }
 .form-input::placeholder, .input-field::placeholder { color: var(--t3); }
 .form-input:focus, .form-select:focus, .input-field:focus {
   border-color: var(--border-focus);
@@ -484,7 +524,7 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  padding: 1.75rem 1rem;
+  padding: 1rem;
   border: 1.5px dashed var(--border-med);
   border-radius: 10px;
   background: var(--bg-input);
@@ -500,10 +540,11 @@ img { display: block; max-width: 100%; }
 /* Required asterisk */
 .required { color: var(--danger); }
 
-/* Image preview grid (edit form) */
-.img-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+/* Image preview grid (edit form) – small compact thumbnails */
+.img-preview-grid { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .img-preview-item {
-  aspect-ratio: 1;
+  width: 72px; height: 72px;
+  flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -636,7 +677,7 @@ img { display: block; max-width: 100%; }
 <main class="site-main page-fade">
 
   <?php if (isset($_SESSION['messages']) && !empty($_SESSION['messages'])): ?>
-    <div class="messages">
+    <div class="messages" id="vl-messages">
       <?php foreach ($_SESSION['messages'] as $type => $messages): ?>
         <?php
           $cls = ['success' => 'alert alert-success',
@@ -644,9 +685,39 @@ img { display: block; max-width: 100%; }
                   'notice'  => 'alert alert-notice'][$type] ?? 'alert alert-notice';
         ?>
         <?php foreach ($messages as $message): ?>
-          <div class="<?= $cls ?>"><?= htmlspecialchars($message) ?></div>
+          <div class="<?= $cls ?>">
+            <?= htmlspecialchars($message) ?>
+            <button class="alert-close" onclick="vlDismissAlert(this.parentElement)" aria-label="Zavřít">&#x2715;</button>
+          </div>
         <?php endforeach; ?>
       <?php endforeach; ?>
       <?php unset($_SESSION['messages']); ?>
     </div>
+    <script>
+    /* Dismiss a single alert with a collapse animation */
+    function vlDismissAlert(el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-4px)';
+        setTimeout(function() {
+            el.style.overflow = 'hidden';
+            el.style.maxHeight = el.offsetHeight + 'px';
+            /* force reflow so transition fires */
+            el.offsetHeight;
+            el.style.maxHeight   = '0';
+            el.style.paddingTop  = '0';
+            el.style.paddingBottom = '0';
+            el.style.marginBottom = '0';
+            el.style.borderTopWidth = '0';
+            el.style.borderBottomWidth = '0';
+            setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+        }, 280);
+    }
+    /* Auto-dismiss after 5 s, stagger 400 ms between messages */
+    (function() {
+        var alerts = document.querySelectorAll('#vl-messages .alert');
+        alerts.forEach(function(alert, i) {
+            setTimeout(function() { vlDismissAlert(alert); }, 5000 + i * 400);
+        });
+    })();
+    </script>
   <?php endif; ?>

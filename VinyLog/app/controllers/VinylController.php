@@ -320,6 +320,12 @@ class VinylController {
 
         // Přepíšeme proměnnou $vinyl z objektu na asociativní pole pro view
         $vinyl = $vinylData;
+
+        // Načteme komentáře k tomuto vinylu (JOIN s users pro jméno autora)
+        require_once __DIR__ . '/../models/Comment.php';
+        $commentModel = new Comment();
+        $comments     = $commentModel->getByVinylId($id);
+
         include __DIR__ . '/../views/vinyls/vinyl_show.php';
     }
 
@@ -372,6 +378,107 @@ class VinylController {
         }
 
         header("Location: VinylController.php?action=index");
+        exit;
+    }
+
+    // =========================================================================
+    // ADD COMMENT – přidání komentáře k vinylu
+    // =========================================================================
+
+    /**
+     * Zpracuje POST formulář pro přidání komentáře.
+     * Ověří přihlášení, neprázdný text a uloží do DB.
+     * Vinyl ID je v URL parametru ?vinyl_id=X.
+     */
+    public function addComment() {
+        // --- Autorizace ---
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Pro přidání komentáře se musíte nejprve přihlásit.');
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
+
+        $vinylId = (int)($_GET['vinyl_id'] ?? 0);
+        $content = trim($_POST['content'] ?? '');
+
+        if (!$vinylId) {
+            $this->addErrorMessage('Neplatný vinyl.');
+            header("Location: VinylController.php?action=index");
+            exit;
+        }
+
+        if ($content === '') {
+            $this->addErrorMessage('Komentář nemůže být prázdný.');
+            header("Location: VinylController.php?action=show&id={$vinylId}");
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/Comment.php';
+        $commentModel = new Comment();
+
+        if ($commentModel->create($vinylId, (int)$_SESSION['user_id'], $content)) {
+            $this->addSuccessMessage('Komentář byl přidán.');
+        } else {
+            $this->addErrorMessage('Komentář se nepodařilo uložit.');
+        }
+
+        header("Location: VinylController.php?action=show&id={$vinylId}");
+        exit;
+    }
+
+    // =========================================================================
+    // DELETE COMMENT – smazání komentáře
+    // =========================================================================
+
+    /**
+     * Smaže komentář dle ?id=X.
+     * Povoleno: vlastníkovi komentáře nebo adminu.
+     * Vinyl ID v ?vinyl_id=X slouží pro přesměrování zpět na detail.
+     */
+    public function deleteComment() {
+        // --- Autorizace ---
+        if (!isset($_SESSION['user_id'])) {
+            $this->addErrorMessage('Přihlaste se prosím.');
+            header('Location: AuthController.php?action=login');
+            exit;
+        }
+
+        $commentId = (int)($_GET['id']       ?? 0);
+        $vinylId   = (int)($_GET['vinyl_id'] ?? 0);
+
+        if (!$commentId) {
+            $this->addErrorMessage('Neplatný komentář.');
+            header("Location: VinylController.php?action=show&id={$vinylId}");
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/Comment.php';
+        $commentModel = new Comment();
+        $comment      = $commentModel->getById($commentId);
+
+        if (!$comment) {
+            $this->addErrorMessage('Komentář nebyl nalezen.');
+            header("Location: VinylController.php?action=show&id={$vinylId}");
+            exit;
+        }
+
+        // Smazat smí: vlastník komentáře NEBO admin
+        $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
+        $isOwn   = (int)$comment['user_id'] === (int)$_SESSION['user_id'];
+
+        if (!$isAdmin && !$isOwn) {
+            $this->addErrorMessage('Nemáte oprávnění smazat tento komentář.');
+            header("Location: VinylController.php?action=show&id={$vinylId}");
+            exit;
+        }
+
+        if ($commentModel->delete($commentId)) {
+            $this->addSuccessMessage('Komentář byl smazán.');
+        } else {
+            $this->addErrorMessage('Komentář se nepodařilo smazat.');
+        }
+
+        header("Location: VinylController.php?action=show&id={$vinylId}");
         exit;
     }
 
@@ -463,9 +570,12 @@ class VinylController {
 $controller = new VinylController();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // POST požadavky: ukládání (store) nebo aktualizace (update)
-    if (isset($_GET['action']) && $_GET['action'] === 'update') {
+    // POST požadavky
+    $postAction = $_GET['action'] ?? '';
+    if ($postAction === 'update') {
         $controller->update($_GET['id'] ?? null);
+    } elseif ($postAction === 'addComment') {
+        $controller->addComment();
     } else {
         $controller->store();
     }
@@ -486,6 +596,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'create':
             $controller->create();
+            break;
+        case 'deleteComment':
+            $controller->deleteComment();
             break;
         default:
             echo 'Neplatná akce.';

@@ -9,11 +9,16 @@ require_once __DIR__ . '/../layout/header.php';
     ← Zpět na seznam vinylů
 </a>
 
-<!-- Záhlaví stránky -->
+<!-- Záhlaví stránky – ID záznamu zobrazeno jako malý badge vedle nadpisu -->
 <div style="margin-bottom:1.75rem;animation: fadeUp 300ms var(--ease-out) both;">
-    <h2 style="font-size:1.5rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em;margin-bottom:0.3rem;">
-        Upravit vinyl
-    </h2>
+    <div style="display:flex;align-items:baseline;gap:0.625rem;margin-bottom:0.3rem;">
+        <h2 style="font-size:1.5rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em;">
+            Upravit vinyl
+        </h2>
+        <span style="font-size:0.72rem;font-weight:600;letter-spacing:0.05em;color:var(--t3);background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:0.15em 0.55em;">
+            #<?= htmlspecialchars($vinyl['id']) ?>
+        </span>
+    </div>
     <p style="font-size:0.875rem;color:var(--t3);">
         Upravujete: <strong style="color:var(--t2);"><?= htmlspecialchars($vinyl['album_name']) ?></strong>
     </p>
@@ -31,15 +36,8 @@ require_once __DIR__ . '/../layout/header.php';
 
         <div class="form-row">
 
-            <!-- ID záznamu (read-only) – uživatel ho nemůže měnit -->
-            <div class="form-group" style="animation: fadeUp 0.35s var(--ease-out) 80ms both;">
-                <label class="form-label">ID v databázi</label>
-                <input type="text" value="<?= htmlspecialchars($vinyl['id']) ?>" readonly
-                       class="form-input">
-            </div>
-
             <!-- Pole: Název alba (povinné, předvyplněno stávající hodnotou) -->
-            <div class="form-group" style="animation: fadeUp 0.35s var(--ease-out) 120ms both;">
+            <div class="form-group" style="animation: fadeUp 0.35s var(--ease-out) 80ms both;">
                 <label for="album_name" class="form-label">
                     Název alba <span class="required">*</span>
                 </label>

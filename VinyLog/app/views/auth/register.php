@@ -46,26 +46,36 @@ require_once __DIR__ . '/../layout/header.php';
                     </div>
 
                     <!-- Pole: Heslo + Potvrzení hesla (vedle sebe na 2 sloupce)
-                         pattern a minlength provádí HTML5 validaci na straně prohlížeče.
-                         Stejná validace je i na serveru v AuthController::storeUser(). -->
+                         Každé pole má toggle pro zobrazení/skrytí hesla.
+                         pattern a minlength provádí HTML5 validaci na straně prohlížeče. -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;animation: fadeUp 0.4s var(--ease-out) 140ms both;">
                         <div>
                             <label for="password" class="form-label">
                                 Heslo <span style="color:var(--red);">*</span>
                             </label>
-                            <input type="password" id="password" name="password" required
-                                   minlength="8"
-                                   pattern="(?=.*\d).{8,}"
-                                   title="Minimálně 8 znaků a alespoň 1 číslice"
-                                   class="input-field" placeholder="min. 8 znaků">
+                            <div class="pwd-wrap">
+                                <input type="password" id="password" name="password" required
+                                       minlength="8"
+                                       pattern="(?=.*\d).{8,}"
+                                       title="Minimálně 8 znaků a alespoň 1 číslice"
+                                       class="input-field" placeholder="min. 8 znaků">
+                                <button type="button" class="pwd-toggle" onclick="vlTogglePwd('password',this)" aria-label="Zobrazit heslo">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label for="password_confirm" class="form-label">
                                 Potvrzení <span style="color:var(--red);">*</span>
                             </label>
                             <!-- Shoda hesel je validována v AuthController, ne HTML5 -->
-                            <input type="password" id="password_confirm" name="password_confirm" required
-                                   minlength="8" class="input-field" placeholder="zopakujte heslo">
+                            <div class="pwd-wrap">
+                                <input type="password" id="password_confirm" name="password_confirm" required
+                                       minlength="8" class="input-field" placeholder="zopakujte heslo">
+                                <button type="button" class="pwd-toggle" onclick="vlTogglePwd('password_confirm',this)" aria-label="Zobrazit heslo">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -124,5 +134,18 @@ require_once __DIR__ . '/../layout/header.php';
 
     </div>
 </div>
+
+<script>
+/* Přepnutí viditelnosti hesla – sdílená funkce pro oba formuláře */
+function vlTogglePwd(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var show  = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.innerHTML = show
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    btn.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
+}
+</script>
 
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

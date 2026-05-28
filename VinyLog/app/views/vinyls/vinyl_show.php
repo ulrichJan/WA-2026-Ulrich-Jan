@@ -185,4 +185,100 @@ require_once __DIR__ . '/../layout/header.php';
 }
 </style>
 
+<!-- =====================================================
+     Sekce komentářů
+     ===================================================== -->
+<div style="margin-top:2rem;max-width:860px;animation: fadeUp 380ms var(--ease-out) 280ms both;">
+
+    <!-- Nadpis sekce -->
+    <h3 style="font-size:1rem;font-weight:700;color:var(--t1);letter-spacing:-0.01em;margin-bottom:1.125rem;">
+        Komentáře
+        <span style="font-size:0.78rem;font-weight:500;color:var(--t3);margin-left:0.4rem;">(<?= count($comments) ?>)</span>
+    </h3>
+
+    <!-- Formulář pro přidání komentáře – viditelný pouze přihlášeným uživatelům -->
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <div class="detail-meta" style="margin-bottom:1.125rem;">
+            <form action="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=addComment&vinyl_id=<?= (int)$vinyl['id'] ?>"
+                  method="post">
+                <div style="display:flex;flex-direction:column;gap:0.625rem;">
+                    <textarea name="content" required
+                              placeholder="Napište komentář k tomuto vinylu..."
+                              rows="3"
+                              style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
+                                     padding:0.5rem 0.75rem;color:var(--t1);font-size:0.875rem;
+                                     font-family:inherit;outline:none;width:100%;resize:vertical;
+                                     min-height:72px;transition:border-color 140ms ease,box-shadow 140ms ease;"
+                              onfocus="this.style.borderColor='var(--border-focus)';this.style.boxShadow='0 0 0 3px var(--accent-bg)'"
+                              onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"></textarea>
+                    <div style="display:flex;justify-content:flex-end;">
+                        <button type="submit" class="btn btn-primary btn-sm">Přidat komentář</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    <?php else: ?>
+        <!-- Výzva k přihlášení pro nepřihlášené návštěvníky -->
+        <div class="detail-meta" style="margin-bottom:1.125rem;text-align:center;padding:1.25rem;">
+            <p style="font-size:0.875rem;color:var(--t3);">
+                Pro přidání komentáře se
+                <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/AuthController.php?action=login"
+                   style="color:var(--accent);font-weight:600;">přihlaste</a>.
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <!-- Seznam komentářů -->
+    <?php if (empty($comments)): ?>
+        <div style="text-align:center;padding:2.5rem 2rem;color:var(--t3);font-size:0.875rem;">
+            Zatím žádné komentáře.
+        </div>
+    <?php else: ?>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <?php foreach ($comments as $comment):
+                // Zobrazíme přezdívku pokud ji uživatel má, jinak username
+                $authorName = htmlspecialchars($comment['nickname'] ?: $comment['username'] ?: 'Anonym');
+                // Počáteční písmeno pro avatar
+                $initial    = mb_strtoupper(mb_substr($comment['nickname'] ?: $comment['username'] ?: '?', 0, 1));
+                // Datum ve formátu DD.MM.YYYY HH:MM
+                $commentDate = (new DateTime($comment['created_at']))->format('d.m.Y H:i');
+                // Kdo může smazat: vlastník komentáře nebo admin
+                $isOwnComment    = isset($_SESSION['user_id']) && (int)$comment['user_id'] === (int)$_SESSION['user_id'];
+                $canDeleteComment = $isOwnComment || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1);
+            ?>
+                <div class="detail-meta" style="padding:1rem 1.25rem;">
+                    <!-- Hlavička komentáře: avatar + autor + datum + smazat -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.625rem;">
+                        <div style="display:flex;align-items:center;gap:0.625rem;">
+                            <!-- Kruhový avatar s iniciálou -->
+                            <div style="width:30px;height:30px;border-radius:50%;
+                                        background:var(--accent-bg);border:1px solid oklch(62% 0.21 148 / 25%);
+                                        display:flex;align-items:center;justify-content:center;
+                                        font-size:0.7rem;font-weight:700;color:var(--accent-txt);flex-shrink:0;">
+                                <?= $initial ?>
+                            </div>
+                            <div>
+                                <span style="font-size:0.875rem;font-weight:600;color:var(--t1);"><?= $authorName ?></span>
+                                <span style="font-size:0.72rem;color:var(--t3);margin-left:0.45rem;"><?= $commentDate ?></span>
+                            </div>
+                        </div>
+                        <?php if ($canDeleteComment): ?>
+                            <a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=deleteComment&id=<?= (int)$comment['id'] ?>&vinyl_id=<?= (int)$vinyl['id'] ?>"
+                               onclick="return confirm('Smazat tento komentář?')"
+                               style="font-size:0.75rem;color:var(--t3);transition:color 140ms ease;white-space:nowrap;"
+                               onmouseover="this.style.color='var(--danger)'"
+                               onmouseout="this.style.color='var(--t3)'">
+                                × smazat
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <!-- Text komentáře -->
+                    <p style="font-size:0.875rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;"><?= htmlspecialchars($comment['content']) ?></p>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+</div>
+
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>
