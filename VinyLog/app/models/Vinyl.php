@@ -347,6 +347,87 @@ class Vinyl {
     }
 
     // =========================================================================
+    // STATISTIKY – agregovaná data pro statistickou stránku
+    // =========================================================================
+
+    /**
+     * Vrátí souhrnná statistická data o celé sbírce.
+     *
+     * Provede několik agregačních dotazů a vrátí výsledky jako asociativní pole.
+     * Všechny dotazy jsou read-only (SELECT) – model nemodifikuje data.
+     *
+     * @return array{
+     *   overview: array,
+     *   byCategory: array[],
+     *   byGenre: array[],
+     *   mostExpensive: array|false,
+     *   latestAdded: array|false
+     * }
+     */
+    public function getStats() {
+        /* --- Přehledová čísla --- */
+        $stmt = $this->conn->query("
+            SELECT
+                COUNT(*)                                                   AS total_count,
+                COALESCE(SUM(IF(price > 0, price, 0)), 0)                 AS total_value,
+                COALESCE(AVG(IF(price > 0 AND price IS NOT NULL, price, NULL)), 0) AS avg_price,
+                MIN(IF(release_year > 0, release_year, NULL))              AS oldest_year,
+                MAX(IF(release_year > 0, release_year, NULL))              AS newest_year,
+                MAX(IF(price > 0, price, NULL))                            AS max_price
+            FROM vinyls
+        ");
+        $overview = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        /* --- Rozdělení dle kategorie --- */
+        $stmt = $this->conn->query("
+            SELECT COALESCE(c.name, 'Nezařazeno') AS name, COUNT(v.id) AS cnt
+            FROM vinyls v
+            LEFT JOIN categories c ON v.category_id = c.id
+            GROUP BY c.id, c.name
+            ORDER BY cnt DESC
+        ");
+        $byCategory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        /* --- Top žánry (max 8) --- */
+        $stmt = $this->conn->query("
+            SELECT genre AS name, COUNT(*) AS cnt
+            FROM vinyls
+            WHERE genre IS NOT NULL AND genre != ''
+            GROUP BY genre
+            ORDER BY cnt DESC
+            LIMIT 8
+        ");
+        $byGenre = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        /* --- Nejdražší deska --- */
+        $stmt = $this->conn->query("
+            SELECT album_name, artist, price
+            FROM vinyls
+            WHERE price > 0
+            ORDER BY price + 0 DESC
+            LIMIT 1
+        ");
+        $mostExpensive = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        /* --- Naposledy přidaná deska --- */
+        $stmt = $this->conn->query("
+            SELECT album_name, artist, id
+            FROM vinyls
+            ORDER BY id DESC
+            LIMIT 1
+        ");
+        $latestAdded = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'overview'      => $overview,
+            'byCategory'    => $byCategory,
+            'byGenre'       => $byGenre,
+            'mostExpensive' => $mostExpensive,
+            'latestAdded'   => $latestAdded,
+        ];
+    }
+
+    // =========================================================================
     // POMOCNÉ METODY – práce s obrázky
     // =========================================================================
 

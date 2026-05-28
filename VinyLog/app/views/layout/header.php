@@ -614,6 +614,116 @@ img { display: block; max-width: 100%; }
 }
 
 /* ============================================================
+   FILTER BAR  (vinyl index search / filter / sort)
+   ============================================================ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.filter-input, .filter-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  color: var(--t1);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.filter-input { flex: 1; min-width: 180px; }
+.filter-input::placeholder { color: var(--t3); }
+.filter-input:focus, .filter-select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.filter-select option { background: var(--bg-elevated); }
+.filter-count {
+  font-size: 0.75rem;
+  color: var(--t3);
+  white-space: nowrap;
+  margin-left: 0.25rem;
+}
+
+/* ============================================================
+   STATS PAGE
+   ============================================================ */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.stat-number {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.stats-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.stats-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 1.125rem;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 40px;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+.bar-label { font-size: 0.875rem; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { background: var(--bg-elevated); border-radius: 99px; height: 8px; overflow: hidden; }
+.bar-fill  { height: 8px; border-radius: 99px; width: 0; transition: width 700ms var(--ease-out); }
+.bar-fill--accent { background: var(--accent); }
+.bar-fill--cta    { background: var(--cta); }
+.bar-count { font-size: 0.8rem; color: var(--t3); text-align: right; }
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+}
+.fact-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.fact-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 0.375rem; }
+.fact-value { font-size: 1rem; font-weight: 600; color: var(--t1); }
+.fact-sub   { font-size: 0.78rem; color: var(--t3); margin-top: 0.2rem; }
+
+/* ============================================================
    EMPTY STATE
    ============================================================ */
 .empty-state { text-align: center; padding: 5rem 2rem; }
@@ -655,6 +765,7 @@ img { display: block; max-width: 100%; }
     <ul class="nav-links">
       <li><a href="?action=index"  class="nav-link">Desky</a></li>
       <li><a href="?action=create" class="nav-link">Přidat desku</a></li>
+      <li><a href="/WA-2026-Ulrich-Jan/VinyLog/app/controllers/VinylController.php?action=stats" class="nav-link">Statistiky</a></li>
     </ul>
     <div class="nav-right">
       <?php if (isset($_SESSION['user_id'])): ?>

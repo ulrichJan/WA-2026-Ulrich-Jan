@@ -382,6 +382,20 @@ class VinylController {
     }
 
     // =========================================================================
+    // STATS – statistická stránka sbírky
+    // =========================================================================
+
+    /**
+     * Načte agregovaná statistická data z modelu a předá je do view.
+     * Přístupné všem – statistiky sbírky jsou veřejné.
+     */
+    public function stats() {
+        $vinyl = new Vinyl();
+        $stats = $vinyl->getStats();
+        include __DIR__ . '/../views/vinyls/vinyl_stats.php';
+    }
+
+    // =========================================================================
     // ADD COMMENT – přidání komentáře k vinylu
     // =========================================================================
 
@@ -599,6 +613,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'deleteComment':
             $controller->deleteComment();
+            break;
+        case 'stats':
+            $controller->stats();
             break;
         default:
             echo 'Neplatná akce.';
